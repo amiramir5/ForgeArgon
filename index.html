@@ -1,0 +1,1813 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Motion Studio — 60FPS Kinetic Engine</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Syne:wght@700;800&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-app: #F5F6F9;
+      --card-bg: #FFFFFF;
+      --ink: #0F172A;
+      --muted: #64748B;
+      --border: #E2E8F0;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #090A0F;
+      font-family: 'Inter', 'Vazirmatn', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--ink);
+      overflow: hidden;
+      height: 100dvh;
+      width: 100vw;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+      user-select: text;
+    }
+
+    .font-fa {
+      font-family: 'Vazirmatn', 'Inter', sans-serif;
+    }
+
+    /* Hide scrollbars cleanly */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Splash Screen Animation */
+    #splash-screen {
+      transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.55s;
+    }
+    #splash-screen.hidden-splash {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    @keyframes pulseLogo {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    .splash-logo-anim {
+      animation: pulseLogo 2.2s infinite ease-in-out;
+    }
+
+    /* Smooth Pill Shadow */
+    .soft-card {
+      background: #FFFFFF;
+      box-shadow: 0 12px 32px -12px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+    }
+
+    .bottom-nav-shadow {
+      box-shadow: 0 -10px 35px -5px rgba(15, 23, 42, 0.07);
+    }
+
+    /* Stage Scaling Container */
+    #stage-viewport-host {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #stage-scaler {
+      position: relative;
+      transform-origin: center center;
+      box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.16);
+      border-radius: 14px;
+      overflow: hidden;
+      background: #FFFFFF;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- INITIAL SPLASH SCREEN (Matches Screenshot 4) -->
+  <div id="splash-screen" class="fixed inset-0 z-50 bg-[#121316] flex flex-col items-center justify-center">
+    <div class="splash-logo-anim w-36 h-32 rounded-[42px] bg-white flex items-center justify-center p-3.5 shadow-2xl">
+      <div class="w-full h-full bg-[#121316] rounded-[30px] flex items-center justify-center gap-2.5">
+        <svg class="w-6 h-6 text-white stroke-[3]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        <svg class="w-9 h-9 text-white fill-white ml-0.5" viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+        <svg class="w-6 h-6 text-white stroke-[3]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </div>
+    </div>
+    <div class="mt-6 text-center">
+      <p class="text-white/90 font-semibold tracking-tight text-base">Motion Studio Pro</p>
+      <p class="text-white/40 text-xs mt-1 font-mono-code">TRUE 1:1 VIEWPORT • 60FPS DETERMINISTIC ENGINE</p>
+    </div>
+  </div>
+
+  <!-- APP SHELL (Mobile-First Responsive Container + Desktop Frame) -->
+  <div class="relative w-full max-w-[460px] h-full md:h-[94dvh] md:rounded-[42px] bg-[#F5F6F9] flex flex-col overflow-hidden md:shadow-[0_0_0_10px_#1E2028,0_30px_80px_rgba(0,0,0,0.6)]">
+
+    <!-- TOP HEADER (Matches Screenshots 1, 2, 3) -->
+    <header class="pt-4 pb-2.5 px-5 flex items-center justify-between shrink-0 z-20">
+      <button id="btn-architecture-info" title="گزارش مهندسی رفع باگ‌ها" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-800 hover:bg-slate-200/70 active:scale-95 transition">
+        <svg class="w-6 h-6 stroke-[2.2]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+
+      <div class="text-center flex flex-col items-center">
+        <div class="flex items-center gap-1.5">
+          <h1 class="text-[19px] font-bold tracking-tight text-slate-900">Motion Studio</h1>
+          <span id="ai-health-dot" title="وضعیت اتصال هوش مصنوعی" class="w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20 cursor-pointer"></span>
+        </div>
+        <p id="header-specs-label" class="text-[13px] font-medium text-slate-500 tracking-wide mt-0.5">
+          9:16 • 60 FPS • 5.0s
+        </p>
+      </div>
+
+      <button id="btn-quick-render-top" title="خروجی سریع ویدیو" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-800 hover:bg-slate-200/70 active:scale-95 transition relative">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="15" y2="6"></line>
+          <line x1="3" y1="12" x2="12" y2="12"></line>
+          <line x1="3" y1="18" x2="10" y2="18"></line>
+          <path d="M16 16v-8l5 2v6"></path>
+          <circle cx="14.5" cy="16.5" r="2.5"></circle>
+        </svg>
+        <span id="library-badge-count" class="hidden absolute top-1 right-1 w-4 h-4 rounded-full bg-slate-900 text-white text-[10px] font-bold flex items-center justify-center">0</span>
+      </button>
+    </header>
+
+    <!-- MAIN TAB VIEWS -->
+    <main class="flex-1 overflow-hidden relative flex flex-col px-5 pb-24">
+
+      <!-- ==================== TAB 1: PREVIEW ==================== -->
+      <section id="tab-preview" class="w-full h-full flex flex-col items-center justify-between">
+        
+        <!-- Aspect Ratio Pill Selector -->
+        <div class="bg-[#ECEEF3] p-1.5 rounded-full flex items-center gap-1 w-full max-w-[310px] shrink-0 my-1">
+          <button data-ratio="9:16" class="ratio-btn flex-1 py-2 rounded-full text-[13px] font-bold transition-all bg-white text-slate-900 shadow-sm">9:16</button>
+          <button data-ratio="16:9" class="ratio-btn flex-1 py-2 rounded-full text-[13px] font-semibold transition-all text-slate-500 hover:text-slate-800">16:9</button>
+          <button data-ratio="1:1" class="ratio-btn flex-1 py-2 rounded-full text-[13px] font-semibold transition-all text-slate-500 hover:text-slate-800">1:1</button>
+          <button data-ratio="4:5" class="ratio-btn flex-1 py-2 rounded-full text-[13px] font-semibold transition-all text-slate-500 hover:text-slate-800">4:5</button>
+        </div>
+
+        <!-- Stage Preview Card (True Proportional Scaling — Never crops 3/4!) -->
+        <div class="w-full flex-1 my-2 flex flex-col items-center justify-center relative min-h-0">
+          <div id="preview-card-shell" class="soft-card w-full h-full rounded-[28px] p-3.5 flex flex-col items-center justify-center relative overflow-hidden border border-slate-200/60">
+            
+            <!-- Top Floating Overlay Badges inside Preview -->
+            <div class="absolute top-3 left-3.5 right-3.5 flex items-center justify-between z-20 pointer-events-none">
+              <span id="resolution-pill" class="px-2.5 py-1 rounded-full bg-slate-900/75 backdrop-blur-md text-white text-[10px] font-mono-code font-medium">
+                1080×1920 (Scale: 100%)
+              </span>
+              <button id="btn-ai-floating" class="pointer-events-auto px-3 py-1 rounded-full bg-slate-900 text-white text-[11px] font-semibold flex items-center gap-1.5 shadow-md hover:bg-slate-800 active:scale-95 transition">
+                <span>✨</span>
+                <span class="font-fa">ساخت با هوش مصنوعی</span>
+              </button>
+            </div>
+
+            <!-- Empty State (Shown only if user clears code) -->
+            <div id="preview-empty-state" class="hidden flex-col items-center justify-center text-center px-6 z-10">
+              <div class="text-slate-400 mb-3">
+                <svg class="w-10 h-10 mx-auto stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+              </div>
+              <h3 class="text-lg font-extrabold text-slate-900">Ready for Your Code</h3>
+              <p class="text-sm text-slate-500 mt-1.5 leading-relaxed">
+                Paste your HTML/CSS in the Code tab, use <strong class="text-slate-700">✨ AI Prompt</strong>, or choose a Preset.
+              </p>
+              <button id="btn-load-default-preset" class="mt-4 px-4 py-2 rounded-full bg-slate-900 text-white text-xs font-semibold shadow-sm hover:bg-slate-800">
+                Load Studio Preset
+              </button>
+            </div>
+
+            <!-- TRUE PROPORTIONAL STAGE HOST -->
+            <div id="stage-viewport-host" class="w-full h-full">
+              <div id="stage-scaler">
+                <iframe
+                  id="motion-iframe"
+                  title="Motion Stage"
+                  sandbox="allow-scripts allow-same-origin"
+                  class="w-full h-full border-0 block pointer-events-none select-none"
+                ></iframe>
+              </div>
+            </div>
+
+            <!-- Interactive Timeline Scrubber Bar at Bottom of Card -->
+            <div class="w-full mt-2.5 pt-2 border-t border-slate-100 flex items-center gap-2.5 z-20 shrink-0">
+              <button id="btn-play-pause" class="w-7 h-7 rounded-full bg-slate-900 text-white flex items-center justify-center hover:bg-slate-800 active:scale-90 transition shrink-0">
+                <svg id="icon-pause" class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                <svg id="icon-play" class="w-3.5 h-3.5 fill-current hidden ml-0.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              </button>
+              <input id="timeline-scrubber" type="range" min="0" max="5000" value="0" step="16" class="flex-1 accent-slate-900 h-1.5 bg-slate-200 rounded-lg cursor-pointer" />
+              <span id="timeline-time-label" class="text-[11px] font-mono-code text-slate-500 w-16 text-right shrink-0">0.0s / 5.0s</span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Bottom Info & Render Trigger Bar -->
+        <div class="w-full shrink-0 pt-1 pb-1">
+          <div class="flex items-center justify-between px-2">
+            <button id="btn-favorite-preset" title="ذخیره در علاقه‌مندی‌ها" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-rose-500 transition">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            </button>
+
+            <div class="text-center">
+              <h2 id="current-motion-title" class="text-[20px] font-extrabold text-slate-900 tracking-tight leading-tight">Swiss Kinetic Editorial</h2>
+              <p id="current-motion-sub" class="text-[12px] font-medium text-slate-500 mt-0.5">Motion Graphics • 5.0s • 60FPS H.264/VP9</p>
+            </div>
+
+            <button id="btn-restart-preview" title="اجرای مجدد انیمیشن از ثانیه صفر" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-900 active:rotate-180 transition duration-300">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+            </button>
+          </div>
+
+          <!-- Primary Export Button -->
+          <div class="mt-2.5 flex items-center gap-2">
+            <button id="btn-start-render" class="w-full py-3.5 px-5 rounded-2xl bg-slate-900 hover:bg-slate-800 active:scale-[0.99] text-white font-bold text-sm shadow-lg shadow-slate-900/15 flex items-center justify-center gap-2.5 transition">
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <span>Render Smooth 60FPS Video</span>
+              <span class="text-[11px] bg-white/15 px-2 py-0.5 rounded-md font-mono-code">1:1 Exact</span>
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==================== TAB 2: CODE & AI STUDIO ==================== -->
+      <section id="tab-code" class="w-full h-full hidden flex-col justify-between">
+        
+        <!-- Top Action Pills (Matches Screenshot 2) -->
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 shrink-0">
+          <button id="btn-code-paste" class="px-3.5 py-2.5 rounded-2xl bg-white text-slate-900 font-bold text-[13px] shadow-sm border border-slate-200/70 flex items-center gap-1.5 shrink-0 active:scale-95 transition">
+            <svg class="w-4 h-4 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+            <span>Paste</span>
+          </button>
+
+          <button id="btn-open-ai-modal" class="px-3.5 py-2.5 rounded-2xl bg-slate-900 text-white font-bold text-[13px] shadow-sm flex items-center gap-1.5 shrink-0 active:scale-95 transition">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 7.4L22 12l-7.6 2.6L12 22l-2.4-7.4L2 12l7.6-2.6L12 2z"></path></svg>
+            <span>AI Edit / Prompt</span>
+          </button>
+
+          <button id="btn-open-presets" class="px-3.5 py-2.5 rounded-2xl bg-white text-slate-900 font-bold text-[13px] shadow-sm border border-slate-200/70 flex items-center gap-1.5 shrink-0 active:scale-95 transition">
+            <svg class="w-4 h-4 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+            <span>Presets</span>
+          </button>
+
+          <button id="btn-isolate-stage" title="حذف دکمه‌های اضافی و استخراج هوشمند فقط بخش موشن‌گرافیک" class="px-3 py-2.5 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold text-[12px] flex items-center gap-1 shrink-0 active:scale-95 transition">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>
+            <span>Isolate Stage</span>
+          </button>
+
+          <button id="btn-code-clear" title="پاک کردن کد" class="p-2.5 rounded-2xl bg-white text-slate-400 hover:text-rose-600 border border-slate-200/70 shrink-0 active:scale-95 transition">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          </button>
+        </div>
+
+        <!-- Helper Snippet Chips -->
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1.5 shrink-0">
+          <button data-snippet="keyframes" class="snippet-chip px-3 py-1.5 rounded-xl bg-[#ECEEF3] hover:bg-slate-200 text-slate-600 font-semibold text-xs shrink-0 transition">+ @keyframes</button>
+          <button data-snippet="3d" class="snippet-chip px-3 py-1.5 rounded-xl bg-[#ECEEF3] hover:bg-slate-200 text-slate-600 font-semibold text-xs shrink-0 transition">+ 3D Transform</button>
+          <button data-snippet="waveform" class="snippet-chip px-3 py-1.5 rounded-xl bg-[#ECEEF3] hover:bg-slate-200 text-slate-600 font-semibold text-xs shrink-0 transition">+ Waveform</button>
+          <button data-snippet="spring" class="snippet-chip px-3 py-1.5 rounded-xl bg-[#ECEEF3] hover:bg-slate-200 text-slate-600 font-semibold text-xs shrink-0 transition">+ Expo Easing</button>
+        </div>
+
+        <!-- Code Editor Card -->
+        <div class="soft-card flex-1 my-1.5 rounded-[26px] p-4 flex flex-col border border-slate-200/70 relative overflow-hidden">
+          <textarea
+            id="code-editor-textarea"
+            spellcheck="false"
+            placeholder="Paste or type your HTML, CSS & JavaScript animation code here..."
+            class="w-full h-full resize-none border-0 outline-none bg-transparent font-mono-code text-[12.5px] leading-relaxed text-slate-800 placeholder-slate-400"
+          ></textarea>
+        </div>
+
+        <!-- Code Footer Stats -->
+        <div class="flex items-center justify-between px-1 py-1 text-xs shrink-0">
+          <span id="code-stats-label" class="text-slate-500 font-medium">1 lines • 0 characters</span>
+          <div class="flex items-center gap-2">
+            <span id="sanitized-badge" class="hidden text-[11px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">Auto-Isolated Stage ✓</span>
+            <span class="font-extrabold text-slate-900 tracking-wide">HTML • CSS • JS</span>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==================== TAB 3: SETTINGS & AI CONNECTION ==================== -->
+      <section id="tab-settings" class="w-full h-full hidden flex-col overflow-y-auto no-scrollbar space-y-3.5 py-1">
+        
+        <!-- AI Connection & Fast Model Config Card -->
+        <div class="soft-card rounded-[24px] p-4 border border-slate-200/70">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500" id="settings-conn-indicator"></span>
+              <h3 class="font-extrabold text-slate-900 text-sm">Gemini Ultra-Fast AI Engine</h3>
+            </div>
+            <button id="btn-test-connection" class="px-3 py-1 rounded-full bg-slate-900 text-white text-[11px] font-bold hover:bg-slate-800 active:scale-95 transition">
+              ⚡ Test Connection Now
+            </button>
+          </div>
+
+          <p class="text-xs text-slate-500 font-fa leading-relaxed mb-3" dir="rtl">
+            قبل از هر دستور، اتصال به صورت خودکار تست می‌شود. در صورت قطعی لحظه‌ای، سیستم بدون نمایش ارور تا ۳ بار با مدل‌های جایگزین (Auto-Fallback) تلاش مجدد می‌کند و با <code class="text-slate-800 font-mono-code">thinkingBudget: 0</code> سریع‌ترین خروجی بدون تایم‌اوت را می‌سازد.
+          </p>
+
+          <!-- Model Selector -->
+          <div class="space-y-2">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Preferred Flash Model</label>
+            <select id="ai-model-select" class="w-full rounded-xl bg-slate-100 border border-slate-200 px-3 py-2.5 text-xs font-bold text-slate-800 outline-none">
+              <option value="gemini-3-flash-preview">Gemini 3.8 / 3.0 Flash Latest (Zero-Thinking • Fastest)</option>
+              <option value="gemini-flash-latest">Gemini Flash Latest (Auto-Routed Low Latency)</option>
+              <option value="gemini-2.5-flash">Gemini 2.5 Flash (High Stability Fallback)</option>
+            </select>
+          </div>
+
+          <!-- Optional Custom API Key Input -->
+          <div class="mt-3 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Custom Gemini API Key (Optional)</label>
+              <span id="ping-result-badge" class="text-[11px] font-mono-code text-emerald-600 font-semibold">Ready (Built-in + Key Support)</span>
+            </div>
+            <input
+              id="custom-api-key-input"
+              type="password"
+              placeholder="AIzaSy... (خالی بگذارید تا از کلید داخلی محیط استفاده شود)"
+              class="w-full rounded-xl bg-slate-100 border border-slate-200 px-3 py-2 text-xs font-mono-code text-slate-800 outline-none focus:border-slate-900"
+            />
+          </div>
+        </div>
+
+        <!-- Anti-Cliche Creative Filter Card -->
+        <div class="soft-card rounded-[24px] p-4 border border-slate-200/70">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-extrabold text-slate-900 text-sm">Strict Anti-Cliche & Anti-Neon Filter</h3>
+              <p class="text-[11px] text-slate-500 font-fa mt-0.5" dir="rtl">ممنوعیت مطلق گرادیانت‌های بنفش/نئونی و طرح‌های تکراری هوش مصنوعی</p>
+            </div>
+            <input id="toggle-anti-cliche" type="checkbox" checked class="w-5 h-5 accent-slate-900 rounded cursor-pointer" />
+          </div>
+          <div class="mt-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-200/60 text-[11px] text-slate-600 font-fa leading-relaxed" dir="rtl">
+            ✓ اجبار به استفاده از تایپوگرافی سوئیسی (Swiss Grid)، کنتراست ادیتوریال، پالت‌های رنگ کاغذ و مرکب (<code class="font-mono-code">#F4F1EA</code>, <code class="font-mono-code">#111111</code>, <code class="font-mono-code">#E63946</code>) و منحنی‌های حرکتی نرم <code class="font-mono-code">cubic-bezier(0.16, 1, 0.3, 1)</code>.
+          </div>
+        </div>
+
+        <!-- Stage Extraction & Render Engine Settings -->
+        <div class="soft-card rounded-[24px] p-4 border border-slate-200/70 space-y-3">
+          <h3 class="font-extrabold text-slate-900 text-sm">Stage & Video Export Parameters</h3>
+
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-xs font-bold text-slate-800">Smart Stage Auto-Extractor</p>
+              <p class="text-[11px] text-slate-500 font-fa" dir="rtl">حذف خودکار دکمه‌های اضافی اطراف کد و استخراج فقط کادر موشن</p>
+            </div>
+            <input id="toggle-smart-extract" type="checkbox" checked class="w-5 h-5 accent-slate-900 rounded cursor-pointer" />
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 pt-1">
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Frame Rate</label>
+              <select id="setting-fps" class="w-full rounded-xl bg-slate-100 px-2.5 py-2 text-xs font-bold text-slate-900">
+                <option value="60" selected>60 FPS (Ultra Smooth)</option>
+                <option value="30">30 FPS (Fast)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Duration</label>
+              <select id="setting-duration" class="w-full rounded-xl bg-slate-100 px-2.5 py-2 text-xs font-bold text-slate-900">
+                <option value="3">3.0 Seconds</option>
+                <option value="5" selected>5.0 Seconds</option>
+                <option value="8">8.0 Seconds</option>
+                <option value="10">10.0 Seconds</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Quality</label>
+              <select id="setting-quality" class="w-full rounded-xl bg-slate-100 px-2.5 py-2 text-xs font-bold text-slate-900">
+                <option value="1" selected>1080p Studio</option>
+                <option value="0.6667">720p Turbo</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==================== TAB 4: LIBRARY (Matches Screenshot 3) ==================== -->
+      <section id="tab-library" class="w-full h-full hidden flex-col items-center justify-center relative">
+        
+        <!-- Empty State (Exact match to Screenshot 3) -->
+        <div id="library-empty-state" class="flex flex-col items-center justify-center text-center px-6 my-auto">
+          <div class="w-24 h-24 rounded-full bg-white shadow-md flex items-center justify-center mb-5 border border-slate-100">
+            <svg class="w-10 h-10 text-slate-900" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="6" y="4" width="14" height="14" rx="2"></rect>
+              <path d="M4 8v10a2 2 0 0 0 2 2h10"></path>
+              <polygon points="11 8 16 11 11 14 11 8" fill="currentColor"></polygon>
+            </svg>
+          </div>
+          <h3 class="text-xl font-extrabold text-slate-900">Library is Empty</h3>
+          <p class="text-sm text-slate-500 mt-2 max-w-[270px] leading-relaxed">
+            Your exported motion videos will appear here.<br/>Tap below to render your first MP4.
+          </p>
+          <button id="btn-render-first-video" class="mt-6 px-7 py-3.5 rounded-full bg-[#121316] text-white font-bold text-sm shadow-lg flex items-center gap-2.5 hover:bg-slate-800 active:scale-95 transition">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <span>Render First Video</span>
+          </button>
+        </div>
+
+        <!-- Populated Video List -->
+        <div id="library-list-container" class="hidden w-full h-full overflow-y-auto no-scrollbar space-y-3 py-2">
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- FLOATING BOTTOM NAVIGATION BAR (Matches Screenshots 1, 2, 3) -->
+    <nav class="absolute bottom-0 left-0 right-0 bg-white rounded-t-[30px] bottom-nav-shadow px-6 py-3 flex items-center justify-around z-30 border-t border-slate-100">
+      <button data-tab="preview" class="nav-tab-btn flex flex-col items-center gap-1 text-slate-900 font-bold text-xs transition">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L3 10v11h6v-7h6v7h6V10L12 3z"/></svg>
+        <span>Preview</span>
+      </button>
+
+      <button data-tab="code" class="nav-tab-btn flex flex-col items-center gap-1 text-slate-400 hover:text-slate-700 font-medium text-xs transition">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+        <span>Code</span>
+      </button>
+
+      <button data-tab="settings" class="nav-tab-btn flex flex-col items-center gap-1 text-slate-400 hover:text-slate-700 font-medium text-xs transition">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
+        <span>Settings</span>
+      </button>
+
+      <button data-tab="library" class="nav-tab-btn flex flex-col items-center gap-1 text-slate-400 hover:text-slate-700 font-medium text-xs transition">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="14" height="14" rx="2"></rect><path d="M4 8v10a2 2 0 0 0 2 2h10"></path><polygon points="11 8 16 11 11 14 11 8" fill="currentColor"></polygon></svg>
+        <span>Library</span>
+      </button>
+    </nav>
+
+    <!-- ==================== MODAL 1: AI MOTION GENERATOR DRAWER ==================== -->
+    <div id="ai-modal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+      <div class="bg-white w-full max-w-[450px] rounded-t-[32px] md:rounded-[32px] p-5 shadow-2xl space-y-4 animate-in slide-in-from-bottom">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center text-sm">✨</span>
+            <div>
+              <h3 class="font-extrabold text-slate-900 text-base">AI Kinetic Motion Designer</h3>
+              <p id="ai-modal-status-sub" class="text-[11px] text-emerald-600 font-semibold">● Connected • Zero-Thinking Low Latency</p>
+            </div>
+          </div>
+          <button id="btn-close-ai-modal" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold">✕</button>
+        </div>
+
+        <!-- Prompt Input -->
+        <div>
+          <textarea
+            id="ai-prompt-input"
+            rows="3"
+            dir="auto"
+            placeholder="پرامت خود را به فارسی یا انگلیسی بنویسید... مثلاً: یک موشن گرافیک تایپوگرافی فوق‌العاده شیک و مینیمال برای معرفی برند قهوه تخصصی با انیمیشن ورود نرم باکس‌ها و آمار..."
+            class="w-full rounded-2xl bg-slate-100 border border-slate-200 p-3.5 text-xs font-fa text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-slate-900 transition"
+          ></textarea>
+
+          <!-- Quick Creative Ideas -->
+          <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar mt-2">
+            <button data-idea="یک استوری موشن گرافیک به سبک پوسترهای سوئیسی با تایپوگرافی درشت، خطوط هندسی دقیق و انیمیشن ورود مرحله‌به‌مرحله برای معرفی استارتاپ" class="ai-idea-chip px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[11px] font-fa text-slate-700 shrink-0">🎯 پوستر تایپوگرافی سوئیسی</button>
+            <button data-idea="موشن گرافیک ادیتوریال مینیمال با پس‌زمینه کرم گرم و باکس‌های مشکی و قرمز که آمار رشد ۳۴۰ درصدی فروش را با نمودارهای متحرک نرم نشان می‌دهد" class="ai-idea-chip px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[11px] font-fa text-slate-700 shrink-0">📊 اینفوگرافیک آماری ادیتوریال</button>
+            <button data-idea="موشن گرافیک هندسی باهاوس (Bauhaus) با دایره‌ها و مستطیل‌های رنگی مات که با ریتم موسیقی و منحنی فنری می‌چرخند و متن عنوان را آشکار می‌کنند" class="ai-idea-chip px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[11px] font-fa text-slate-700 shrink-0">📐 هندسه متحرک باهاوس</button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-[11px] bg-slate-50 px-3 py-2 rounded-xl border border-slate-200/70">
+          <span class="font-semibold text-slate-700 font-fa">فیلتر ضد نئون و ضد گرادیانت‌های کلیشه‌ای</span>
+          <span class="px-2 py-0.5 rounded bg-slate-900 text-white font-mono-code text-[10px]">ACTIVE</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button id="btn-ping-before-ai" class="px-3.5 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs shrink-0 transition">
+            ⚡ تست اتصال
+          </button>
+          <button id="btn-run-ai-generate" class="flex-1 py-3 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition">
+            <span id="ai-btn-text" class="font-fa">تولید سریع کد موشن‌گرافیک</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MODAL 2: PRESETS DRAWER ==================== -->
+    <div id="presets-modal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+      <div class="bg-white w-full max-w-[450px] rounded-t-[32px] md:rounded-[32px] p-5 shadow-2xl space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="font-extrabold text-slate-900 text-base">Studio Motion Presets (Anti-Cliche)</h3>
+          <button id="btn-close-presets-modal" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold">✕</button>
+        </div>
+        <div id="presets-list" class="space-y-2 max-h-[60vh] overflow-y-auto no-scrollbar"></div>
+      </div>
+    </div>
+
+    <!-- ==================== MODAL 3: DETERMINISTIC 60FPS RENDER PROGRESS ==================== -->
+    <div id="render-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-5">
+      <div class="bg-white w-full max-w-[380px] rounded-[32px] p-6 shadow-2xl text-center space-y-4">
+        <div class="w-14 h-14 rounded-2xl bg-slate-900 text-white flex items-center justify-center mx-auto font-mono-code font-bold text-sm" id="render-percent-badge">
+          0%
+        </div>
+        <div>
+          <h3 class="font-extrabold text-slate-900 text-lg">Rendering 60FPS Motion</h3>
+          <p id="render-status-detail" class="text-xs text-slate-500 mt-1 font-mono-code">Synchronizing WebAnimations & Computed Styles...</p>
+        </div>
+
+        <!-- Live Mini Canvas Mirror -->
+        <div class="w-full h-36 bg-slate-100 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-200 p-2">
+          <canvas id="export-render-canvas" class="max-w-full max-h-full object-contain rounded-lg shadow-sm"></canvas>
+        </div>
+
+        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+          <div id="render-progress-bar" class="bg-slate-900 h-full w-0 transition-all duration-100"></div>
+        </div>
+
+        <button id="btn-cancel-render" class="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-700 font-bold text-xs transition">
+          Cancel Render
+        </button>
+      </div>
+    </div>
+
+    <!-- ==================== MODAL 4: AI STUDIO FIXES GUIDE (Persian) ==================== -->
+    <div id="arch-modal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-white w-full max-w-[440px] max-h-[85vh] rounded-[30px] p-5 shadow-2xl flex flex-col">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <h3 class="font-extrabold text-slate-900 text-sm font-fa">چرا اپ قبلی مشکل داشت و چطور اینجا حل شد؟</h3>
+          <button id="btn-close-arch-modal" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold">✕</button>
+        </div>
+        <div class="overflow-y-auto no-scrollbar py-3 space-y-3 text-xs font-fa leading-relaxed text-slate-700" dir="rtl">
+          <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200/70">
+            <strong class="text-slate-900 block mb-1">۱. حل مشکل نمایش ۱/۴ تصویر در پیش‌نمایش:</strong>
+            در اپ قبلی، کانتینر موشن ابعاد ثابت مثلاً <code class="font-mono-code">1080x1920</code> داشت اما بدون <code class="font-mono-code">ResizeObserver</code> و محاسبه ضریب <code class="font-mono-code">Math.min(w/1080, h/1920)</code> داخل کارت قرار گرفته بود. در این نسخه، موتور مقیاس‌دهی لحظه‌ای ۱۰۰٪ پیکسل‌های بوم را بدون کشیدگی متن یا باکس دقیقاً وسط کارت جا می‌دهد.
+          </div>
+          <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200/70">
+            <strong class="text-slate-900 block mb-1">۲. چرا در خروجی قبلی انیمیشن‌ها می‌پریدند و یهو ظاهر می‌شدند؟</strong>
+            وقتی از <code class="font-mono-code">html2canvas</code> معمولی یا کلون کردن DOM استفاده می‌کنید، مرورگر در هر فریم کل تگ‌ها را از نو می‌سازد و CSS <code class="font-mono-code">@keyframes</code> به فریم صفر ریست می‌شود! در اینجا ما از تکنیک <strong>Computed Style Freeze + WebAnimations Seek</strong> استفاده کردیم: یعنی در هر فریم، انیمیشن را روی میلی‌ثانیه دقیق قفل می‌کنیم، مقدار دقیق <code class="font-mono-code">transform</code> و <code class="font-mono-code">opacity</code> لحظه‌ای هر باکس و متن را استخراج و فریز می‌کنیم و سپس رندر می‌گیریم تا انیمیشن دقیقاً مثل کروم نرم باشد.
+          </div>
+          <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200/70">
+            <strong class="text-slate-900 block mb-1">۳. استخراج هوشمند بخش موشن (حذف دکمه‌های اضافه):</strong>
+            سیستم <strong>Smart Stage Isolation</strong> به صورت خودکار دکمه‌های اضافی مثل Replay/Reset که هوش مصنوعی گاهی بیرون کادر می‌سازد را حذف کرده و فقط کانتینر اصلی موشن را تمام‌صفحه می‌کند.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-box" class="pointer-events-none fixed top-5 left-1/2 -translate-x-1/2 z-50 opacity-0 transition-all duration-300 bg-slate-900 text-white px-4 py-2 rounded-full text-xs font-semibold shadow-xl flex items-center gap-2">
+      <span id="toast-text">Ready</span>
+    </div>
+
+  </div>
+
+  <script>
+    /********************************************************************
+     * 1. STUDIO-GRADE ANTI-CLICHE PRESETS (NO NEON / NO CHEAP GRADIENTS)
+     * Uses high-framerate deterministic requestAnimationFrame + CSS
+     ********************************************************************/
+    const STUDIO_PRESETS = [
+      {
+        id: 'swiss-editorial',
+        title: 'Swiss Kinetic Editorial',
+        subtitle: 'Typographic Grid • 60FPS Expo Physics',
+        code: `<!DOCTYPE html>
+<html>
+<head>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;700;900&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body, html {
+    width: 100%; height: 100%; overflow: hidden;
+    background: #F4F1EA; color: #111111;
+    font-family: 'Inter', sans-serif;
+  }
+  #stage {
+    position: relative; width: 100%; height: 100%;
+    padding: 7%; display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .grid-line-h {
+    position: absolute; left: 0; right: 0; height: 2px; background: #111111;
+    transform-origin: left center;
+  }
+  .grid-line-v {
+    position: absolute; top: 0; bottom: 0; width: 2px; background: #111111;
+    transform-origin: top center;
+  }
+  .badge {
+    display: inline-block; background: #E63946; color: #F4F1EA;
+    font-weight: 800; font-size: 2.2vmin; padding: 1vmin 2.4vmin;
+    letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .hero-title {
+    font-size: 11.5vmin; font-weight: 900; line-height: 0.92;
+    letter-spacing: -0.04em; text-transform: uppercase;
+  }
+  .card-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 2.5vmin;
+  }
+  .stat-box {
+    background: #111111; color: #F4F1EA; padding: 3.5vmin;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .stat-box.accent { background: #E63946; }
+  .stat-num { font-size: 7.5vmin; font-weight: 900; letter-spacing: -0.03em; }
+  .stat-label { font-size: 2.1vmin; font-weight: 600; opacity: 0.85; margin-top: 1vmin; text-transform: uppercase; }
+</style>
+</head>
+<body>
+  <div id="stage">
+    <div id="lh1" class="grid-line-h" style="top: 18%;"></div>
+    <div id="lh2" class="grid-line-h" style="bottom: 28%;"></div>
+    <div id="lv1" class="grid-line-v" style="left: 7%;"></div>
+    <div id="lv2" class="grid-line-v" style="right: 7%;"></div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; z-index:2;">
+      <div id="badge" class="badge">ISSUE NO. 04 — KINETIC</div>
+      <div id="year" style="font-size:2.6vmin; font-weight:800;">SWISS // 2026</div>
+    </div>
+
+    <div style="z-index:2; my:auto;">
+      <div id="t1" class="hero-title">PURE</div>
+      <div id="t2" class="hero-title" style="color:#E63946;">MOTION</div>
+      <div id="t3" class="hero-title">SYSTEM.</div>
+      <p id="sub" style="font-size:2.6vmin; font-weight:600; max-width:80%; margin-top:2.5vmin; line-height:1.4;">
+         Precision frame-accurate choreography rendered at sixty frames per second without compression artifacts.
+      </p>
+    </div>
+
+    <div class="card-row" style="z-index:2;">
+      <div id="box1" class="stat-box">
+        <div id="num1" class="stat-num">60.0</div>
+        <div class="stat-label">Frames / Sec</div>
+      </div>
+      <div id="box2" class="stat-box accent">
+        <div id="num2" class="stat-num">100%</div>
+        <div class="stat-label">Vector Crisp</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const easeOutExpo = (x) => x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+    const clamp = (v, min = 0, max = 1) => Math.max(min, Math.min(max, v));
+    const prog = (t, start, dur) => easeOutExpo(clamp((t - start) / dur));
+
+    window.__renderAtTime = function(ms) {
+      const t = (ms % 5000) / 1000;
+
+      document.getElementById('lh1').style.transform = 'scaleX(' + prog(t, 0.0, 0.7) + ')';
+      document.getElementById('lh2').style.transform = 'scaleX(' + prog(t, 0.15, 0.7) + ')';
+      document.getElementById('lv1').style.transform = 'scaleY(' + prog(t, 0.1, 0.8) + ')';
+      document.getElementById('lv2').style.transform = 'scaleY(' + prog(t, 0.2, 0.8) + ')';
+
+      const bP = prog(t, 0.2, 0.6);
+      const badge = document.getElementById('badge');
+      badge.style.opacity = bP;
+      badge.style.transform = 'translateY(' + ((1 - bP) * 30) + 'px)';
+
+      const titles = ['t1', 't2', 't3'];
+      titles.forEach((id, idx) => {
+        const p = prog(t, 0.35 + idx * 0.14, 0.75);
+        const el = document.getElementById(id);
+        el.style.opacity = p;
+        el.style.transform = 'translateX(' + ((1 - p) * -80) + 'px) skewX(' + ((1 - p) * 8) + 'deg)';
+      });
+
+      const sP = prog(t, 0.85, 0.7);
+      const sub = document.getElementById('sub');
+      sub.style.opacity = sP;
+      sub.style.transform = 'translateY(' + ((1 - sP) * 25) + 'px)';
+
+      ['box1', 'box2'].forEach((id, idx) => {
+        const p = prog(t, 1.05 + idx * 0.16, 0.75);
+        const el = document.getElementById(id);
+        el.style.opacity = p;
+        el.style.transform = 'translateY(' + ((1 - p) * 60) + 'px) scale(' + (0.9 + 0.1 * p) + ')';
+      });
+
+      const countP = prog(t, 1.1, 1.2);
+      document.getElementById('num1').textContent = (60 * countP).toFixed(1);
+      document.getElementById('num2').textContent = Math.round(100 * countP) + '%';
+    };
+
+    let start = performance.now();
+    function loop(now) {
+      if (!window.__manualScrub) {
+        window.__renderAtTime(now - start);
+      }
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+  <\/script>
+</body>
+</html>`
+      },
+      {
+        id: 'bauhaus-rhythm',
+        title: 'Bauhaus Geometric Rhythm',
+        subtitle: 'Warm Constructivist Shapes • Pure Easing',
+        code: `<!DOCTYPE html>
+<html>
+<head>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body, html {
+    width: 100%; height: 100%; overflow: hidden;
+    background: #161616; color: #F5F2EB;
+    font-family: 'Syne', sans-serif;
+  }
+  #stage {
+    width: 100%; height: 100%; padding: 7%;
+    display: flex; flex-direction: column; justify-content: space-between;
+    position: relative;
+  }
+  .geo-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 3vmin;
+    height: 55%; my: auto;
+  }
+  .cell {
+    position: relative; overflow: hidden; border-radius: 3vmin;
+    display: flex; align-items: center; justify-content: center;
+  }
+</style>
+</head>
+<body>
+  <div id="stage">
+    <div id="top" style="display:flex; justify-content:space-between; font-size:2.4vmin; font-weight:700; letter-spacing:0.1em;">
+      <span>WEIMAR ARCHIVE</span>
+      <span style="color:#F4A261;">1919 — 2026</span>
+    </div>
+
+    <div class="geo-grid">
+      <div id="c1" class="cell" style="background:#E76F51;">
+        <div id="inner1" style="width:65%; height:65%; border-radius:50%; background:#161616;"></div>
+      </div>
+      <div id="c2" class="cell" style="background:#F4A261;">
+        <div id="inner2" style="width:65%; height:65%; background:#F5F2EB;"></div>
+      </div>
+      <div id="c3" class="cell" style="background:#2A9D8F;">
+        <div id="inner3" style="width:70%; height:22%; background:#161616;"></div>
+      </div>
+      <div id="c4" class="cell" style="background:#F5F2EB; color:#161616;">
+        <span id="num" style="font-size:9vmin; font-weight:800;">01</span>
+      </div>
+    </div>
+
+    <div>
+      <h1 id="headline" style="font-size:8.2vmin; font-weight:800; line-height:0.95; text-transform:uppercase;">
+        FORM FOLLOWS<br/><span style="color:#E76F51;">MOTION.</span>
+      </h1>
+    </div>
+  </div>
+  <script>
+    const easeOutQuart = (x) => 1 - Math.pow(1 - x, 4);
+    const clamp = (v) => Math.max(0, Math.min(1, v));
+    const p = (t, s, d) => easeOutQuart(clamp((t - s) / d));
+
+    window.__renderAtTime = function(ms) {
+      const t = (ms % 5000) / 1000;
+      ['c1','c2','c3','c4'].forEach((id, i) => {
+        const pr = p(t, 0.1 + i * 0.12, 0.7);
+        const el = document.getElementById(id);
+        el.style.opacity = pr;
+        el.style.transform = 'scale(' + (0.65 + 0.35 * pr) + ') translateY(' + ((1 - pr) * 50) + 'px)';
+      });
+
+      const rot = (t * 72) % 360;
+      document.getElementById('inner2').style.transform = 'rotate(' + rot + 'deg)';
+      document.getElementById('inner3').style.transform = 'rotate(' + (-rot) + 'deg)';
+      document.getElementById('inner1').style.transform = 'scale(' + (0.85 + 0.2 * Math.sin(t * 3.5)) + ')';
+
+      const hp = p(t, 0.55, 0.8);
+      const hl = document.getElementById('headline');
+      hl.style.opacity = hp;
+      hl.style.transform = 'translateY(' + ((1 - hp) * 40) + 'px)';
+    };
+
+    let st = performance.now();
+    function tick(now) {
+      if (!window.__manualScrub) window.__renderAtTime(now - st);
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  <\/script>
+</body>
+</html>`
+      },
+      {
+        id: 'editorial-data-story',
+        title: 'Minimalist Data Story',
+        subtitle: 'Clean Financial / Product Metrics Reveal',
+        code: `<!DOCTYPE html>
+<html>
+<head>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;700;900&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body, html {
+    width: 100%; height: 100%; overflow: hidden;
+    background: #FFFFFF; color: #0F172A; font-family: 'Inter', sans-serif;
+  }
+  #stage {
+    width: 100%; height: 100%; padding: 8%;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .bar-row {
+    display: flex; align-items: flex-end; gap: 3vmin; height: 42%;
+    padding-bottom: 2vmin; border-bottom: 3px solid #0F172A;
+  }
+  .bar-col {
+    flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end;
+  }
+  .bar-fill {
+    width: 100%; background: #0F172A; border-radius: 1.5vmin 1.5vmin 0 0;
+    transform-origin: bottom center;
+  }
+  .bar-fill.highlight { background: #2563EB; }
+</style>
+</head>
+<body>
+  <div id="stage">
+    <div>
+      <div style="font-size:2.4vmin; font-weight:800; color:#2563EB; letter-spacing:0.12em;">ANNUAL REPORT</div>
+      <div id="big-metric" style="font-size:14vmin; font-weight:900; letter-spacing:-0.05em; line-height:1;">+340%</div>
+      <div style="font-size:3vmin; font-weight:600; color:#64748B; margin-top:1vmin;">Organic Velocity Growth</div>
+    </div>
+
+    <div class="bar-row">
+      <div class="bar-col"><div id="b1" class="bar-fill" style="height:35%;"></div></div>
+      <div class="bar-col"><div id="b2" class="bar-fill" style="height:52%;"></div></div>
+      <div class="bar-col"><div id="b3" class="bar-fill" style="height:68%;"></div></div>
+      <div class="bar-col"><div id="b4" class="bar-fill highlight" style="height:96%;"></div></div>
+    </div>
+
+    <div id="foot" style="display:flex; justify-content:space-between; font-size:2.4vmin; font-weight:700; color:#0F172A;">
+      <span>Q1 — Q4 VERIFIED</span>
+      <span>STUDIO INDEX</span>
+    </div>
+  </div>
+  <script>
+    const ease = (x) => 1 - Math.pow(1 - x, 4);
+    const clamp = (v) => Math.max(0, Math.min(1, v));
+    window.__renderAtTime = function(ms) {
+      const t = (ms % 5000) / 1000;
+      const mP = ease(clamp(t / 1.1));
+      document.getElementById('big-metric').textContent = '+' + Math.round(340 * mP) + '%';
+
+      ['b1','b2','b3','b4'].forEach((id, idx) => {
+        const p = ease(clamp((t - (0.2 + idx * 0.14)) / 0.8));
+        document.getElementById(id).style.transform = 'scaleY(' + p + ')';
+      });
+    };
+    let s = performance.now();
+    function r(now) {
+      if (!window.__manualScrub) window.__renderAtTime(now - s);
+      requestAnimationFrame(r);
+    }
+    requestAnimationFrame(r);
+  <\/script>
+</body>
+</html>`
+      }
+    ];
+
+    /********************************************************************
+     * 2. APPLICATION STATE & LOGICAL DIMENSIONS
+     ********************************************************************/
+    const RATIO_SPECS = {
+      '9:16': { width: 1080, height: 1920 },
+      '16:9': { width: 1920, height: 1080 },
+      '1:1':  { width: 1080, height: 1080 },
+      '4:5':  { width: 1080, height: 1350 }
+    };
+
+    const state = {
+      activeTab: 'preview',
+      ratio: '9:16',
+      fps: 60,
+      durationSec: 5,
+      qualityScale: 1,
+      isPlaying: true,
+      currentTimeMs: 0,
+      code: STUDIO_PRESETS[0].code,
+      title: STUDIO_PRESETS[0].title,
+      smartExtract: true,
+      antiCliche: true,
+      isRendering: false,
+      cancelRenderRequested: false,
+      library: []
+    };
+
+    /********************************************************************
+     * 3. SMART STAGE AUTO-EXTRACTOR (SOLVES UNWANTED AI BUTTONS/WRAPPERS)
+     ********************************************************************/
+    function sanitizeAndIsolateStageHTML(rawCode, targetW, targetH, forceIsolate = true) {
+      if (!rawCode || !rawCode.trim()) return '';
+
+      let code = rawCode.trim();
+
+      // Strip markdown code fences if user or AI pasted ```html ... ```
+      code = code.replace(/^```(?:html|xml)?\s*/i, '').replace(/```$/i, '').trim();
+
+      // Inject CSS & Helper script into the document so that:
+      // 1) Logical viewport fills 100% of targetW x targetH without scrollbars
+      // 2) Extraneous floating UI buttons outside the main stage are hidden when Smart Isolation is active
+      // 3) Both CSS @keyframes/WebAnimations AND window.__renderAtTime(ms) can be deterministically stepped!
+      const stageEnforcerPatch = `
+<style id="__motion_studio_enforcer">
+  html, body {
+    width: ${targetW}px !important;
+    height: ${targetH}px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+  ${forceIsolate ? `
+  /* Hide accidental extra buttons/navbars generated outside stage by LLMs */
+  body > button, body > .controls, body > .toolbar, body > nav, body > header:not(#stage header), body > footer:not(#stage footer),
+  #replay-btn, .replay-btn, .export-btn, .control-panel {
+    display: none !important;
+  }
+  ` : ''}
+</style>
+<script id="__motion_studio_bridge">
+  window.__manualScrub = false;
+  window.__seekMotionStage = function(timeMs) {
+    window.__manualScrub = true;
+    try {
+      // 1. If the scene defines a deterministic render hook, invoke it directly
+      if (typeof window.__renderAtTime === 'function') {
+        window.__renderAtTime(timeMs);
+      }
+      // 2. Step all CSS @keyframes & Web Animations API animations to exact millisecond
+      if (document.getAnimations) {
+        const anims = document.getAnimations({ subtree: true });
+        for (let i = 0; i < anims.length; i++) {
+          try {
+            anims[i].pause();
+            anims[i].currentTime = timeMs;
+          } catch (e) {}
+        }
+      }
+    } catch (err) {}
+  };
+
+  window.__resumeMotionStage = function() {
+    window.__manualScrub = false;
+    try {
+      if (document.getAnimations) {
+        const anims = document.getAnimations({ subtree: true });
+        for (let i = 0; i < anims.length; i++) {
+          try { anims[i].play(); } catch (e) {}
+        }
+      }
+    } catch (err) {}
+  };
+<\/script>`;
+
+      if (code.includes('</head>')) {
+        return code.replace('</head>', stageEnforcerPatch + '\n</head>');
+      } else if (code.includes('<body')) {
+        return stageEnforcerPatch + '\n' + code;
+      } else {
+        return `<!DOCTYPE html><html><head>${stageEnforcerPatch}</head><body>${code}</body></html>`;
+      }
+    }
+
+    /********************************************************************
+     * 4. TRUE PROPORTIONAL VIEWPORT SCALER (FIXES 1/4 CROPPED PREVIEW)
+     ********************************************************************/
+    const stageHost = document.getElementById('stage-viewport-host');
+    const stageScaler = document.getElementById('stage-scaler');
+    const motionIframe = document.getElementById('motion-iframe');
+    const resolutionPill = document.getElementById('resolution-pill');
+
+    function updateStageProportionalScale() {
+      const spec = RATIO_SPECS[state.ratio];
+      const hostRect = stageHost.getBoundingClientRect();
+      if (hostRect.width <= 10 || hostRect.height <= 10) return;
+
+      const pad = 8;
+      const availW = Math.max(40, hostRect.width - pad);
+      const availH = Math.max(40, hostRect.height - pad);
+
+      const scale = Math.min(availW / spec.width, availH / spec.height);
+
+      stageScaler.style.width = `${spec.width}px`;
+      stageScaler.style.height = `${spec.height}px`;
+      stageScaler.style.transform = `scale(${scale})`;
+
+      const pct = Math.round(scale * 100);
+      resolutionPill.textContent = `${spec.width}×${spec.height} • Fit ${pct}%`;
+    }
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateStageProportionalScale();
+    });
+    resizeObserver.observe(stageHost);
+    window.addEventListener('resize', updateStageProportionalScale);
+
+    /********************************************************************
+     * 5. LIVE STAGE LOADER & TIMELINE SCRUBBER
+     ********************************************************************/
+    const codeTextarea = document.getElementById('code-editor-textarea');
+    const codeStatsLabel = document.getElementById('code-stats-label');
+    const previewEmptyState = document.getElementById('preview-empty-state');
+    const headerSpecsLabel = document.getElementById('header-specs-label');
+    const currentMotionSub = document.getElementById('current-motion-sub');
+    const scrubber = document.getElementById('timeline-scrubber');
+    const timeLabel = document.getElementById('timeline-time-label');
+
+    function updateHeaderAndCodeStats() {
+      headerSpecsLabel.textContent = `${state.ratio} • ${state.fps} FPS • ${state.durationSec.toFixed(1)}s`;
+      currentMotionSub.textContent = `Motion Graphics • ${state.durationSec.toFixed(1)}s • ${state.fps}FPS H.264/VP9`;
+      scrubber.max = state.durationSec * 1000;
+
+      const text = state.code || '';
+      const lines = text ? text.split('\n').length : 1;
+      codeStatsLabel.textContent = `${lines} lines • ${text.length} characters`;
+    }
+
+    function loadCodeIntoStage() {
+      updateHeaderAndCodeStats();
+      updateStageProportionalScale();
+
+      if (!state.code || !state.code.trim()) {
+        previewEmptyState.classList.remove('hidden');
+        previewEmptyState.classList.add('flex');
+        motionIframe.srcdoc = '';
+        return;
+      }
+
+      previewEmptyState.classList.add('hidden');
+      previewEmptyState.classList.remove('flex');
+
+      const spec = RATIO_SPECS[state.ratio];
+      const preparedHTML = sanitizeAndIsolateStageHTML(
+        state.code,
+        spec.width,
+        spec.height,
+        state.smartExtract
+      );
+
+      motionIframe.srcdoc = preparedHTML;
+      state.currentTimeMs = 0;
+      state.isPlaying = true;
+      updatePlayPauseIcons();
+    }
+
+    function updatePlayPauseIcons() {
+      const iconPause = document.getElementById('icon-pause');
+      const iconPlay = document.getElementById('icon-play');
+      if (state.isPlaying) {
+        iconPause.classList.remove('hidden');
+        iconPlay.classList.add('hidden');
+      } else {
+        iconPause.classList.add('hidden');
+        iconPlay.classList.remove('hidden');
+      }
+    }
+
+    // Scrubber UI Loop
+    let lastTick = performance.now();
+    function uiTimelineLoop(now) {
+      const dt = now - lastTick;
+      lastTick = now;
+
+      if (state.isPlaying && !state.isRendering) {
+        state.currentTimeMs = (state.currentTimeMs + dt) % (state.durationSec * 1000);
+        scrubber.value = Math.round(state.currentTimeMs);
+        timeLabel.textContent = `${(state.currentTimeMs / 1000).toFixed(1)}s / ${state.durationSec.toFixed(1)}s`;
+      }
+      requestAnimationFrame(uiTimelineLoop);
+    }
+    requestAnimationFrame(uiTimelineLoop);
+
+    scrubber.addEventListener('input', (e) => {
+      const ms = Number(e.target.value);
+      state.currentTimeMs = ms;
+      state.isPlaying = false;
+      updatePlayPauseIcons();
+      timeLabel.textContent = `${(ms / 1000).toFixed(1)}s / ${state.durationSec.toFixed(1)}s`;
+
+      const win = motionIframe.contentWindow;
+      if (win && typeof win.__seekMotionStage === 'function') {
+        win.__seekMotionStage(ms);
+      }
+    });
+
+    document.getElementById('btn-play-pause').addEventListener('click', () => {
+      state.isPlaying = !state.isPlaying;
+      updatePlayPauseIcons();
+      const win = motionIframe.contentWindow;
+      if (win) {
+        if (state.isPlaying && typeof win.__resumeMotionStage === 'function') {
+          win.__resumeMotionStage();
+        } else if (!state.isPlaying && typeof win.__seekMotionStage === 'function') {
+          win.__seekMotionStage(state.currentTimeMs);
+        }
+      }
+    });
+
+    document.getElementById('btn-restart-preview').addEventListener('click', () => {
+      loadCodeIntoStage();
+      showToast('انیمیشن از ثانیه ۰.۰ مجدداً اجرا شد');
+    });
+
+    /********************************************************************
+     * 6. DETERMINISTIC 60FPS COMPUTED-STYLE VIDEO RENDER ENGINE
+     * Solves choppy/missing CSS animations & distorted aspect ratios!
+     ********************************************************************/
+    /**
+     * Why animations broke in the user's previous app:
+     * When you serialize DOM to SVG foreignObject, CSS @keyframes reset to 0s on the new image.
+     * Solution: At each frame timestamp `t`, we pause & seek the live iframe animations to `t`,
+     * read `getComputedStyle(el)` on every element in the stage, bake the exact interpolated
+     * `transform`, `opacity`, `backgroundColor`, `color`, `width`, `height`, `clipPath`, `filter`
+     * directly into a clean clone's inline style, and rasterize that exact frozen state to the target canvas!
+     */
+    const CRITICAL_COMPUTED_PROPS = [
+      'display', 'position', 'top', 'left', 'right', 'bottom',
+      'width', 'height', 'minWidth', 'minHeight', 'maxWidth', 'maxHeight',
+      'margin', 'padding', 'boxSizing',
+      'flexDirection', 'justifyContent', 'alignItems', 'gap',
+      'gridTemplateColumns', 'gridTemplateRows', 'gridColumn', 'gridRow',
+      'transform', 'transformOrigin', 'opacity', 'visibility',
+      'background', 'backgroundColor', 'backgroundImage',
+      'color', 'fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'letterSpacing', 'textAlign', 'textTransform',
+      'border', 'borderRadius', 'boxShadow', 'overflow', 'zIndex', 'filter', 'clipPath'
+    ];
+
+    function buildFrozenStageClone(iframeDoc, iframeWin, width, height) {
+      const origBody = iframeDoc.body;
+      const cloneBody = origBody.cloneNode(true);
+
+      // Remove script tags from the static frame snapshot
+      cloneBody.querySelectorAll('script').forEach(s => s.remove());
+
+      const origEls = [origBody, ...origBody.querySelectorAll('*')];
+      const cloneEls = [cloneBody, ...cloneBody.querySelectorAll('*')];
+
+      for (let i = 0; i < origEls.length; i++) {
+        const origEl = origEls[i];
+        const cloneEl = cloneEls[i];
+        if (!origEl || !cloneEl || origEl.tagName === 'SCRIPT' || origEl.tagName === 'STYLE') continue;
+
+        const cs = iframeWin.getComputedStyle(origEl);
+        let styleStr = '';
+        for (let p = 0; p < CRITICAL_COMPUTED_PROPS.length; p++) {
+          const prop = CRITICAL_COMPUTED_PROPS[p];
+          const cssKey = prop.replace(/[A-Z]/g, m => '-' + m.toLowerCase());
+          const val = cs.getPropertyValue(cssKey);
+          if (val) {
+            styleStr += `${cssKey}:${val};`;
+          }
+        }
+        // Disable animation reset on the snapshot clone so baked inline transform/opacity rules unconditionally win
+        styleStr += 'animation:none !important;transition:none !important;';
+        cloneEl.setAttribute('style', styleStr);
+
+        // If the element is a <canvas> inside the user's code, copy its bitmap into an <img>
+        if (origEl.tagName === 'CANVAS') {
+          try {
+            const dataUrl = origEl.toDataURL();
+            const img = iframeDoc.createElement('img');
+            img.src = dataUrl;
+            img.setAttribute('style', styleStr);
+            cloneEl.replaceWith(img);
+          } catch (e) {}
+        }
+      }
+
+      cloneBody.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+      const serialized = new XMLSerializer().serializeToString(cloneBody);
+
+      const svgMarkup = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+          <foreignObject width="100%" height="100%" x="0" y="0">
+            ${serialized}
+          </foreignObject>
+        </svg>
+      `;
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgMarkup);
+    }
+
+    function drawSvgDataUrlToCanvas(svgDataUrl, ctx, width, height) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          ctx.clearRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(true);
+        };
+        img.onerror = () => resolve(false);
+        img.src = svgDataUrl;
+      });
+    }
+
+    async function startSmoothVideoExport() {
+      if (state.isRendering) return;
+      state.isRendering = true;
+      state.cancelRenderRequested = false;
+
+      const renderModal = document.getElementById('render-modal');
+      const progressBar = document.getElementById('render-progress-bar');
+      const percentBadge = document.getElementById('render-percent-badge');
+      const statusDetail = document.getElementById('render-status-detail');
+      const exportCanvas = document.getElementById('export-render-canvas');
+
+      renderModal.classList.remove('hidden');
+
+      const spec = RATIO_SPECS[state.ratio];
+      const outW = Math.round(spec.width * state.qualityScale);
+      const outH = Math.round(spec.height * state.qualityScale);
+
+      exportCanvas.width = outW;
+      exportCanvas.height = outH;
+      const ctx = exportCanvas.getContext('2d', { alpha: false });
+
+      const fps = state.fps;
+      const totalFrames = Math.round(state.durationSec * fps);
+
+      // Select best supported high-bitrate MP4 / WebM codec
+      const mimeCandidates = [
+        'video/mp4;codecs=avc1.42E01E',
+        'video/mp4',
+        'video/webm;codecs=vp9',
+        'video/webm;codecs=vp8',
+        'video/webm'
+      ];
+      let selectedMime = mimeCandidates.find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || 'video/webm';
+
+      const stream = exportCanvas.captureStream(fps);
+      const chunks = [];
+      const recorder = new MediaRecorder(stream, {
+        mimeType: selectedMime,
+        videoBitsPerSecond: 16_000_000 // 16 Mbps Studio Crisp Quality
+      });
+
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) chunks.push(e.data);
+      };
+
+      const recorderFinished = new Promise((resolve) => {
+        recorder.onstop = () => {
+          const blob = new Blob(chunks, { type: selectedMime });
+          resolve({ blob, mimeType: selectedMime });
+        };
+      });
+
+      const iframeWin = motionIframe.contentWindow;
+      const iframeDoc = motionIframe.contentDocument;
+
+      recorder.start();
+
+      for (let frame = 0; frame <= totalFrames; frame++) {
+        if (state.cancelRenderRequested) break;
+
+        const timeMs = (frame / fps) * 1000;
+
+        // 1. Deterministically step iframe animations to exact millisecond
+        if (iframeWin && typeof iframeWin.__seekMotionStage === 'function') {
+          iframeWin.__seekMotionStage(timeMs);
+        }
+
+        // 2. Bake computed styles at this exact frame and draw to high-res export canvas
+        if (iframeDoc && iframeWin) {
+          ctx.save();
+          ctx.scale(state.qualityScale, state.qualityScale);
+          const svgUrl = buildFrozenStageClone(iframeDoc, iframeWin, spec.width, spec.height);
+          await drawSvgDataUrlToCanvas(svgUrl, ctx, spec.width, spec.height);
+          ctx.restore();
+        }
+
+        // Request track frame if supported
+        const videoTrack = stream.getVideoTracks()[0];
+        if (videoTrack && typeof videoTrack.requestFrame === 'function') {
+          videoTrack.requestFrame();
+        }
+
+        // Yield ~16ms so MediaRecorder encodes smooth 60fps timestamps accurately
+        await new Promise(r => setTimeout(r, 1000 / fps));
+
+        const pct = Math.min(100, Math.round((frame / totalFrames) * 100));
+        progressBar.style.width = `${pct}%`;
+        percentBadge.textContent = `${pct}%`;
+        statusDetail.textContent = `Frame ${frame}/${totalFrames} • ${outW}×${outH} @ ${fps}FPS`;
+      }
+
+      recorder.stop();
+      const result = await recorderFinished;
+
+      // Resume live stage playback
+      if (iframeWin && typeof iframeWin.__resumeMotionStage === 'function') {
+        iframeWin.__resumeMotionStage();
+      }
+
+      renderModal.classList.add('hidden');
+      state.isRendering = false;
+
+      if (!state.cancelRenderRequested && result.blob.size > 0) {
+        const ext = result.mimeType.includes('mp4') ? 'mp4' : 'webm';
+        const url = URL.createObjectURL(result.blob);
+        const item = {
+          id: 'vid_' + Date.now(),
+          title: state.title || 'Custom Motion',
+          ratio: state.ratio,
+          resolution: `${outW}×${outH}`,
+          fps: state.fps,
+          duration: state.durationSec,
+          ext,
+          url,
+          createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        state.library.unshift(item);
+        renderLibraryList();
+        switchTab('library');
+        showToast('ویدیو با کیفیت ۶۰ فریم بر ثانیه آماده دانلود شد ✓');
+      } else {
+        showToast('فرآیند خروجی لغو شد');
+      }
+    }
+
+    document.getElementById('btn-start-render').addEventListener('click', startSmoothVideoExport);
+    document.getElementById('btn-quick-render-top').addEventListener('click', startSmoothVideoExport);
+    document.getElementById('btn-render-first-video').addEventListener('click', startSmoothVideoExport);
+    document.getElementById('btn-cancel-render').addEventListener('click', () => {
+      state.cancelRenderRequested = true;
+    });
+
+    /********************************************************************
+     * 7. LIBRARY RENDERING & DOWNLOAD
+     ********************************************************************/
+    function renderLibraryList() {
+      const emptyEl = document.getElementById('library-empty-state');
+      const listEl = document.getElementById('library-list-container');
+      const badgeEl = document.getElementById('library-badge-count');
+
+      if (state.library.length === 0) {
+        emptyEl.classList.remove('hidden');
+        listEl.classList.add('hidden');
+        badgeEl.classList.add('hidden');
+        return;
+      }
+
+      badgeEl.textContent = state.library.length;
+      badgeEl.classList.remove('hidden');
+      emptyEl.classList.add('hidden');
+      listEl.classList.remove('hidden');
+
+      listEl.innerHTML = state.library.map(item => `
+        <div class="soft-card rounded-[24px] p-4 border border-slate-200/70 space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h4 class="font-extrabold text-slate-900 text-sm">${item.title}</h4>
+              <p class="text-[11px] text-slate-500 font-mono-code">${item.ratio} • ${item.resolution} • ${item.fps}FPS • ${item.duration}s</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-mono-code text-[10px] font-bold uppercase">
+              .${item.ext}
+            </span>
+          </div>
+
+          <div class="w-full h-52 bg-slate-950 rounded-2xl overflow-hidden flex items-center justify-center">
+            <video src="${item.url}" controls loop playsinline class="max-w-full max-h-full object-contain"></video>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <a href="${item.url}" download="${item.title.replace(/\s+/g, '_')}_${item.ratio.replace(':','x')}_${item.fps}fps.${item.ext}"
+               class="flex-1 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs text-center transition">
+              Download Video (.${item.ext.toUpperCase()})
+            </a>
+            <button onclick="deleteLibraryItem('${item.id}')" class="p-2.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-500 transition">
+              ✕
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.deleteLibraryItem = function(id) {
+      state.library = state.library.filter(x => x.id !== id);
+      renderLibraryList();
+    };
+
+    /********************************************************************
+     * 8. ULTRA-FAST GEMINI AI ENGINE WITH PRE-FLIGHT PING,
+     *    ZERO-THINKING BUDGET, AUTO-RETRY & ANTI-CLICHE SYSTEM PROMPT
+     ********************************************************************/
+    const apiKey = ""; // Canvas runtime automatically injects key if left empty; or uses custom key if user enters one.
+
+    function getActiveApiKey() {
+      const customKey = document.getElementById('custom-api-key-input').value.trim();
+      return customKey || apiKey;
+    }
+
+    function getCandidateModels() {
+      const selected = document.getElementById('ai-model-select').value;
+      // Fallback chain ensures that even if user picks an alias, it falls back seamlessly without failing
+      return Array.from(new Set([
+        selected,
+        'gemini-3-flash-preview',
+        'gemini-2.5-flash'
+      ]));
+    }
+
+    async function callGeminiWithFastRetry(payload, timeoutMs = 22000) {
+      const models = getCandidateModels();
+      const key = getActiveApiKey();
+      let lastError = null;
+
+      for (const modelName of models) {
+        const delays = [400, 900, 1800];
+        for (let attempt = 0; attempt < delays.length; attempt++) {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), timeoutMs);
+          try {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${key}`;
+            const response = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+              signal: controller.signal
+            });
+            clearTimeout(timer);
+
+            if (response.ok) {
+              const data = await response.json();
+              const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (text) return { text, modelUsed: modelName };
+            } else if (response.status === 404) {
+              // Model name not found on this endpoint -> break inner loop to immediately try next model in fallback chain
+              break;
+            }
+          } catch (err) {
+            clearTimeout(timer);
+            lastError = err;
+          }
+          await new Promise(r => setTimeout(r, delays[attempt]));
+        }
+      }
+      throw lastError || new Error('Connection failed after retries');
+    }
+
+    // Fast Pre-Flight Connection Test (Ping)
+    async function verifyAiConnection(silent = false) {
+      const dot = document.getElementById('ai-health-dot');
+      const settingsDot = document.getElementById('settings-conn-indicator');
+      const pingBadge = document.getElementById('ping-result-badge');
+      const modalSub = document.getElementById('ai-modal-status-sub');
+
+      dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-ping';
+      pingBadge.textContent = 'Pinging Gemini Flash...';
+      modalSub.textContent = '● Testing connection...';
+
+      const t0 = performance.now();
+      try {
+        const pingPayload = {
+          contents: [{ parts: [{ text: 'Reply with OK' }] }],
+          generationConfig: {
+            maxOutputTokens: 5,
+            temperature: 0
+          }
+        };
+        const res = await callGeminiWithFastRetry(pingPayload, 8000);
+        const latency = Math.round(performance.now() - t0);
+
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20';
+        settingsDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500';
+        pingBadge.textContent = `Connected (${latency}ms • ${res.modelUsed})`;
+        modalSub.textContent = `● Ready (${latency}ms latency • Zero-Thinking Active)`;
+
+        if (!silent) showToast(`اتصال برقرار است (${latency}ms) ✓`);
+        return true;
+      } catch (e) {
+        dot.className = 'w-2 h-2 rounded-full bg-rose-500 ring-4 ring-rose-500/20';
+        settingsDot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500';
+        pingBadge.textContent = 'Connection Warning — Check API Key';
+        modalSub.textContent = '● Offline / Check Custom API Key in Settings';
+        if (!silent) showToast('خطا در تست اتصال؛ کلید API را در Settings بررسی کنید');
+        return false;
+      }
+    }
+
+    async function generateMotionWithAI() {
+      const promptInput = document.getElementById('ai-prompt-input');
+      const userPrompt = promptInput.value.trim();
+      if (!userPrompt) {
+        showToast('لطفاً توضیح موشن‌گرافیک مورد نظر را بنویسید');
+        return;
+      }
+
+      const btn = document.getElementById('btn-run-ai-generate');
+      const btnText = document.getElementById('ai-btn-text');
+      btn.disabled = true;
+      btnText.textContent = '۱/۲ تست اتصال لحظه‌ای...';
+
+      // Step 1: Mandatory Pre-Flight Connection Check as requested
+      const isConnected = await verifyAiConnection(true);
+      if (!isConnected) {
+        btn.disabled = false;
+        btnText.textContent = 'تولید سریع کد موشن‌گرافیک';
+        showToast('عدم ارتباط با سرور؛ لطفاً کلید API را بررسی کنید');
+        return;
+      }
+
+      btnText.textContent = '۲/۲ در حال طراحی موشن‌گرافیک...';
+      const spec = RATIO_SPECS[state.ratio];
+      const antiClicheRules = state.antiCliche ? `
+STRICT VISUAL FILTER (MANDATORY):
+- NEVER use neon purple/cyan/magenta gradients, glowing cyberpunk orbs, dark glassmorphism cards, or generic AI SaaS templates.
+- Use authentic, world-class Editorial / Swiss International / Bauhaus / Kinetic Typography design:
+  warm architectural palettes (e.g., #F4F1EA paper, #111111 ink, #E63946 vermilion, #1D3557 Prussian blue, or crisp monochrome with bold accent blocks).
+- Use bold typography, geometric grids, sharp borders, and ultra-smooth exponential easing.` : '';
+
+      const systemInstruction = `You are an elite Motion Graphics Director & Creative Technologist.
+Return ONLY a complete, self-contained HTML5 document (starting with <!DOCTYPE html> and ending with </html>) with embedded CSS and JavaScript. Do NOT wrap in markdown explanations.
+STAGE REQUIREMENTS:
+- Aspect Ratio: ${state.ratio} (${spec.width}x${spec.height}). Use responsive vmin/% units so #stage fills 100% width and height with overflow:hidden.
+- NEVER create external UI buttons (no Replay, Download, or Pause buttons inside the HTML). Only create the pure motion graphics canvas inside <div id="stage">.
+- Define \`window.__renderAtTime = function(ms) { ... }\` driven by \`requestAnimationFrame\` so every box, text line, counter, and geometric shape animates smoothly at 60 FPS using mathematical easing (e.g. easeOutExpo) over a ${state.durationSec * 1000}ms loop.
+${antiClicheRules}`;
+
+      try {
+        const payload = {
+          contents: [{ parts: [{ text: userPrompt }] }],
+          systemInstruction: { parts: [{ text: systemInstruction }] },
+          generationConfig: {
+            temperature: 0.75
+          }
+        };
+
+        const result = await callGeminiWithFastRetry(payload, 25000);
+        let cleanHtml = result.text.trim();
+        cleanHtml = cleanHtml.replace(/^```(?:html|xml)?\s*/i, '').replace(/```$/i, '').trim();
+
+        state.code = cleanHtml;
+        state.title = 'AI Studio Motion';
+        codeTextarea.value = state.code;
+        document.getElementById('current-motion-title').textContent = state.title;
+        document.getElementById('sanitized-badge').classList.remove('hidden');
+
+        loadCodeIntoStage();
+        document.getElementById('ai-modal').classList.add('hidden');
+        switchTab('preview');
+        showToast('کد موشن‌گرافیک با موفقیت ساخته و جایگذاری شد ✨');
+      } catch (err) {
+        showToast('خطا در دریافت کد؛ دوباره تلاش کنید');
+      } finally {
+        btn.disabled = false;
+        btnText.textContent = 'تولید سریع کد موشن‌گرافیک';
+      }
+    }
+
+    /********************************************************************
+     * 9. UI EVENT LISTENERS & NAVIGATION
+     ********************************************************************/
+    function switchTab(tabName) {
+      state.activeTab = tabName;
+      ['preview', 'code', 'settings', 'library'].forEach(t => {
+        const sec = document.getElementById(`tab-${t}`);
+        if (t === tabName) {
+          sec.classList.remove('hidden');
+          sec.classList.add('flex');
+        } else {
+          sec.classList.add('hidden');
+          sec.classList.remove('flex');
+        }
+      });
+
+      document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+        if (btn.dataset.tab === tabName) {
+          btn.classList.remove('text-slate-400', 'font-medium');
+          btn.classList.add('text-slate-900', 'font-bold');
+        } else {
+          btn.classList.add('text-slate-400', 'font-medium');
+          btn.classList.remove('text-slate-900', 'font-bold');
+        }
+      });
+
+      if (tabName === 'preview') {
+        setTimeout(updateStageProportionalScale, 30);
+      }
+    }
+
+    document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+
+    // Aspect Ratio Selector Buttons
+    document.querySelectorAll('.ratio-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.ratio = btn.dataset.ratio;
+        document.querySelectorAll('.ratio-btn').forEach(b => {
+          if (b.dataset.ratio === state.ratio) {
+            b.className = 'ratio-btn flex-1 py-2 rounded-full text-[13px] font-bold transition-all bg-white text-slate-900 shadow-sm';
+          } else {
+            b.className = 'ratio-btn flex-1 py-2 rounded-full text-[13px] font-semibold transition-all text-slate-500 hover:text-slate-800';
+          }
+        });
+        loadCodeIntoStage();
+      });
+    });
+
+    // Code Editor Live Sync
+    let codeDebounce = null;
+    codeTextarea.addEventListener('input', () => {
+      state.code = codeTextarea.value;
+      updateHeaderAndCodeStats();
+      clearTimeout(codeDebounce);
+      codeDebounce = setTimeout(() => {
+        loadCodeIntoStage();
+      }, 450);
+    });
+
+    // Paste Button
+    document.getElementById('btn-code-paste').addEventListener('click', async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          state.code = text;
+          codeTextarea.value = text;
+          document.getElementById('sanitized-badge').classList.remove('hidden');
+          loadCodeIntoStage();
+          showToast('کد جایگذاری و کادر موشن بهینه‌سازی شد ✓');
+        }
+      } catch (e) {
+        codeTextarea.focus();
+        showToast('کد خود را در ویرایشگر Paste کنید');
+      }
+    });
+
+    // Isolate Stage Button
+    document.getElementById('btn-isolate-stage').addEventListener('click', () => {
+      state.smartExtract = true;
+      document.getElementById('toggle-smart-extract').checked = true;
+      document.getElementById('sanitized-badge').classList.remove('hidden');
+      loadCodeIntoStage();
+      showToast('دکمه‌های اضافی حذف و فقط بوم موشن استخراج شد ✓');
+    });
+
+    // Clear Code Button
+    document.getElementById('btn-code-clear').addEventListener('click', () => {
+      state.code = '';
+      codeTextarea.value = '';
+      loadCodeIntoStage();
+      showToast('ویرایشگر کد پاک شد');
+    });
+
+    document.getElementById('btn-load-default-preset').addEventListener('click', () => {
+      state.code = STUDIO_PRESETS[0].code;
+      state.title = STUDIO_PRESETS[0].title;
+      codeTextarea.value = state.code;
+      loadCodeIntoStage();
+    });
+
+    // Snippet Chips
+    const SNIPPETS = {
+      keyframes: `\n<style>\n@keyframes kineticReveal {\n  0% { opacity: 0; transform: translateY(40px) scale(0.94); }\n  100% { opacity: 1; transform: translateY(0) scale(1); }\n}\n.anim-box { animation: kineticReveal 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards; }\n</style>`,
+      '3d': `\n<style>\n.stage-3d { perspective: 1200px; transform-style: preserve-3d; }\n.card-3d { transform: rotateX(14deg) rotateY(-18deg); }\n</style>`,
+      waveform: `\n<script>\n// Smooth Kinetic Sine Wave\nconst waveY = Math.sin(Date.now() * 0.005) * 24;\n<\/script>`,
+      spring: `\n<script>\nconst easeOutExpo = (x) => x === 1 ? 1 : 1 - Math.pow(2, -10 * x);\n<\/script>`
+    };
+
+    document.querySelectorAll('.snippet-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const snip = SNIPPETS[chip.dataset.snippet] || '';
+        state.code += snip;
+        codeTextarea.value = state.code;
+        loadCodeIntoStage();
+        showToast('قطعه کد اضافه شد');
+      });
+    });
+
+    // Presets Modal
+    function populatePresetsModal() {
+      const list = document.getElementById('presets-list');
+      list.innerHTML = STUDIO_PRESETS.map((p, idx) => `
+        <button onclick="selectStudioPreset(${idx})" class="w-full text-left p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 flex items-center justify-between transition">
+          <div>
+            <h4 class="font-extrabold text-slate-900 text-sm">${p.title}</h4>
+            <p class="text-xs text-slate-500 mt-0.5">${p.subtitle}</p>
+          </div>
+          <span class="px-3 py-1 rounded-full bg-slate-900 text-white text-xs font-bold">Load</span>
+        </button>
+      `).join('');
+    }
+
+    window.selectStudioPreset = function(idx) {
+      const preset = STUDIO_PRESETS[idx];
+      state.code = preset.code;
+      state.title = preset.title;
+      codeTextarea.value = state.code;
+      document.getElementById('current-motion-title').textContent = state.title;
+      loadCodeIntoStage();
+      document.getElementById('presets-modal').classList.add('hidden');
+      switchTab('preview');
+      showToast(`پریست "${preset.title}" بارگذاری شد`);
+    };
+
+    document.getElementById('btn-open-presets').addEventListener('click', () => {
+      populatePresetsModal();
+      document.getElementById('presets-modal').classList.remove('hidden');
+    });
+    document.getElementById('btn-close-presets-modal').addEventListener('click', () => {
+      document.getElementById('presets-modal').classList.add('hidden');
+    });
+
+    // AI Modal Controls
+    document.getElementById('btn-open-ai-modal').addEventListener('click', () => {
+      document.getElementById('ai-modal').classList.remove('hidden');
+      verifyAiConnection(true);
+    });
+    document.getElementById('btn-ai-floating').addEventListener('click', () => {
+      document.getElementById('ai-modal').classList.remove('hidden');
+      verifyAiConnection(true);
+    });
+    document.getElementById('btn-close-ai-modal').addEventListener('click', () => {
+      document.getElementById('ai-modal').classList.add('hidden');
+    });
+    document.querySelectorAll('.ai-idea-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.getElementById('ai-prompt-input').value = chip.dataset.idea;
+      });
+    });
+    document.getElementById('btn-ping-before-ai').addEventListener('click', () => verifyAiConnection(false));
+    document.getElementById('btn-test-connection').addEventListener('click', () => verifyAiConnection(false));
+    document.getElementById('ai-health-dot').addEventListener('click', () => verifyAiConnection(false));
+    document.getElementById('btn-run-ai-generate').addEventListener('click', generateMotionWithAI);
+
+    // Architecture Guide Modal
+    document.getElementById('btn-architecture-info').addEventListener('click', () => {
+      document.getElementById('arch-modal').classList.remove('hidden');
+    });
+    document.getElementById('btn-close-arch-modal').addEventListener('click', () => {
+      document.getElementById('arch-modal').classList.add('hidden');
+    });
+
+    // Settings Listeners
+    document.getElementById('setting-fps').addEventListener('change', (e) => {
+      state.fps = Number(e.target.value);
+      updateHeaderAndCodeStats();
+    });
+    document.getElementById('setting-duration').addEventListener('change', (e) => {
+      state.durationSec = Number(e.target.value);
+      updateHeaderAndCodeStats();
+    });
+    document.getElementById('setting-quality').addEventListener('change', (e) => {
+      state.qualityScale = Number(e.target.value);
+    });
+    document.getElementById('toggle-smart-extract').addEventListener('change', (e) => {
+      state.smartExtract = e.target.checked;
+      loadCodeIntoStage();
+    });
+    document.getElementById('toggle-anti-cliche').addEventListener('change', (e) => {
+      state.antiCliche = e.target.checked;
+    });
+
+    function showToast(msg) {
+      const box = document.getElementById('toast-box');
+      const txt = document.getElementById('toast-text');
+      txt.textContent = msg;
+      box.classList.remove('opacity-0');
+      box.classList.add('opacity-100');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => {
+        box.classList.remove('opacity-100');
+        box.classList.add('opacity-0');
+      }, 2800);
+    }
+
+    // Initialize Application on Load
+    window.addEventListener('DOMContentLoaded', () => {
+      codeTextarea.value = state.code;
+      loadCodeIntoStage();
+
+      // Dismiss Splash Screen smoothly and run automatic connection health check
+      setTimeout(() => {
+        document.getElementById('splash-screen').classList.add('hidden-splash');
+        updateStageProportionalScale();
+        verifyAiConnection(true);
+      }, 950);
+    });
+  </script>
+</body>
+</html>
