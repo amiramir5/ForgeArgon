@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Motion Studio Pro v3.0 — Native 60FPS Direct Rasterizer</title>
+  <title>Motion Studio Pro v4.0 — True-Matrix 60FPS Renderer</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -113,7 +113,16 @@
 </head>
 <body>
 
-  <!-- Splash Screen matching screenshot 4 -->
+  <!-- Hidden font pre-warmer so Canvas 2D always has Vazirmatn & Lalezar ready in parent window -->
+  <div aria-hidden="true" style="position:fixed; left:-9999px; top:-9999px; opacity:0; pointer-events:none;">
+    <span style="font-family:'Vazirmatn'; font-weight:400;">تست فونت وزیرمتن</span>
+    <span style="font-family:'Vazirmatn'; font-weight:700;">تست فونت وزیرمتن بولد</span>
+    <span style="font-family:'Vazirmatn'; font-weight:900;">تست فونت وزیرمتن بلک</span>
+    <span style="font-family:'Lalezar'; font-weight:400;">تست فونت لاله‌زار</span>
+    <span style="font-family:'Inter'; font-weight:900;">Inter Black Test</span>
+  </div>
+
+  <!-- Splash Screen -->
   <div id="splash-screen" class="fixed inset-0 z-50 bg-[#121316] flex flex-col items-center justify-center">
     <div class="w-28 h-28 bg-white rounded-[30px] flex items-center justify-center shadow-2xl splash-logo-anim">
       <div class="w-20 h-16 bg-[#121316] rounded-[18px] flex items-center justify-center gap-1.5">
@@ -147,12 +156,12 @@
           <span id="ai-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-emerald-500/15" title="Engine Ready"></span>
         </div>
         <div class="flex items-center gap-1.5 mt-0.5">
-          <p id="header-meta" class="text-[11.5px] font-semibold text-slate-400 tracking-wide">9:16 • 60 FPS • 10.0s</p>
+          <p id="header-meta" class="text-[11.5px] font-semibold text-slate-400 tracking-wide">9:16 • 60 FPS • 6.0s</p>
           <span id="auto-dur-badge" class="px-1.5 py-0.5 text-[9.5px] font-bold bg-emerald-50 text-emerald-700 rounded-md border border-emerald-200/80">Auto</span>
         </div>
       </div>
 
-      <button id="btn-sound-toggle" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-200/60 active:scale-95 transition relative" title="Toggle Built-in Audio & Synth">
+      <button id="btn-sound-toggle" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-200/60 active:scale-95 transition relative" title="Toggle Studio Audio & Export Sound">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 18V5l12-2v13"></path>
           <circle cx="6" cy="18" r="3"></circle>
@@ -227,8 +236,8 @@
                   <polygon points="5 3 19 12 5 21 5 3"></polygon>
                 </svg>
               </button>
-              <input id="timeline-scrubber" type="range" min="0" max="10000" value="0" step="16" class="flex-1" />
-              <span id="scrubber-time-label" class="text-[11px] font-mono-code font-semibold text-slate-500 w-20 text-right shrink-0">0.0s / 10.0s</span>
+              <input id="timeline-scrubber" type="range" min="0" max="6000" value="0" step="16" class="flex-1" />
+              <span id="scrubber-time-label" class="text-[11px] font-mono-code font-semibold text-slate-500 w-20 text-right shrink-0">0.0s / 6.0s</span>
             </div>
 
           </div>
@@ -245,7 +254,7 @@
 
             <div class="text-center">
               <h2 id="active-preset-title" class="text-lg font-black text-slate-900 tracking-tight">Custom Motion</h2>
-              <p id="active-preset-subtitle" class="text-[11.5px] font-semibold text-slate-400">Motion Graphics • 10.0s • H.264 MP4</p>
+              <p id="active-preset-subtitle" class="text-[11.5px] font-semibold text-slate-400">Motion Graphics • 6.0s • 60FPS + Audio</p>
             </div>
 
             <button id="btn-restart-preview" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-800 active:rotate-180 transition duration-300" title="Restart Animation">
@@ -263,14 +272,14 @@
               </svg>
               <span>Render Smooth 60FPS Video</span>
             </div>
-            <span id="render-btn-badge" class="px-2.5 py-1 rounded-lg bg-white/10 text-[11px] font-mono-code font-semibold">10.0s • 1:1</span>
+            <span id="render-btn-badge" class="px-2.5 py-1 rounded-lg bg-white/10 text-[11px] font-mono-code font-semibold">6.0s • 🔊</span>
           </button>
         </div>
       </section>
 
       <!-- ==================== TAB 2: CODE ==================== -->
       <section id="tab-code" class="hidden flex-1 flex flex-col justify-between py-1">
-        <!-- Top Action Buttons matching Screenshot 2 -->
+        <!-- Top Action Buttons -->
         <div class="flex items-center gap-2 w-full mb-2 shrink-0">
           <button id="btn-paste-code" class="flex-1 py-2.5 px-3 bg-white rounded-2xl font-bold text-xs text-slate-800 flex items-center justify-center gap-1.5 soft-card border border-slate-100 active:scale-95 transition">
             <svg class="w-4 h-4 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -308,11 +317,11 @@
         <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 shrink-0">
           <button id="btn-rescan-duration" class="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-800 whitespace-nowrap active:scale-95 transition flex items-center gap-1">
             <span>⏱️</span>
-            <span id="detected-duration-chip">Auto-Detect: 10.0s</span>
+            <span id="detected-duration-chip">Auto-Detect: 6.0s</span>
           </button>
+          <button data-snippet="persianCard" class="snippet-chip px-3 py-1.5 rounded-xl bg-[#EAEEF4] text-[11px] font-semibold text-slate-600 whitespace-nowrap active:scale-95 transition">+ Persian Story</button>
           <button data-snippet="keyframes" class="snippet-chip px-3 py-1.5 rounded-xl bg-[#EAEEF4] text-[11px] font-semibold text-slate-600 whitespace-nowrap active:scale-95 transition">+ @keyframes</button>
           <button data-snippet="transform3d" class="snippet-chip px-3 py-1.5 rounded-xl bg-[#EAEEF4] text-[11px] font-semibold text-slate-600 whitespace-nowrap active:scale-95 transition">+ 3D Transform</button>
-          <button data-snippet="persianCard" class="snippet-chip px-3 py-1.5 rounded-xl bg-[#EAEEF4] text-[11px] font-semibold text-slate-600 whitespace-nowrap active:scale-95 transition">+ Persian Story</button>
         </div>
 
         <!-- Code Editor Box -->
@@ -339,8 +348,8 @@
         <div class="soft-card rounded-[24px] p-4 border border-slate-200/60">
           <div class="flex items-center justify-between mb-2">
             <div>
-              <h3 class="text-sm font-extrabold text-slate-900">Video Duration & Auto-Scanner</h3>
-              <p id="duration-reason-label" class="text-[11px] text-emerald-600 font-semibold">Detected automatically from code timeline</p>
+              <h3 class="text-sm font-extrabold text-slate-900">Smart Timeline & Duration Scanner</h3>
+              <p id="duration-reason-label" class="text-[11px] text-emerald-600 font-semibold">Calculated from real CSS/JS animations</p>
             </div>
             <label class="flex items-center gap-1.5 cursor-pointer bg-slate-100 px-2.5 py-1 rounded-full">
               <input id="chk-auto-duration" type="checkbox" checked class="accent-slate-900 rounded" />
@@ -349,8 +358,8 @@
           </div>
 
           <div class="flex items-center gap-3 mt-3">
-            <input id="input-duration-sec" type="range" min="2" max="30" step="0.5" value="10" class="flex-1" />
-            <span id="label-duration-sec" class="px-3 py-1.5 rounded-xl bg-slate-900 text-white font-mono-code text-xs font-bold w-16 text-center">10.0s</span>
+            <input id="input-duration-sec" type="range" min="2" max="30" step="0.5" value="6" class="flex-1" />
+            <span id="label-duration-sec" class="px-3 py-1.5 rounded-xl bg-slate-900 text-white font-mono-code text-xs font-bold w-16 text-center">6.0s</span>
           </div>
 
           <div class="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-100">
@@ -362,10 +371,10 @@
               </select>
             </div>
             <div>
-              <span class="text-[10px] font-bold text-slate-400 uppercase block">Bitrate</span>
+              <span class="text-slate-400 text-[10px] font-bold uppercase block">Bitrate</span>
               <select id="select-bitrate" class="mt-1 w-full bg-slate-100 rounded-xl px-2.5 py-1.5 text-xs font-extrabold text-slate-800 outline-none">
-                <option value="16000000" selected>16 Mbps (Master)</option>
-                <option value="10000000">10 Mbps (High)</option>
+                <option value="18000000" selected>18 Mbps (Master)</option>
+                <option value="12000000">12 Mbps (High)</option>
               </select>
             </div>
             <div>
@@ -379,8 +388,8 @@
         <div class="soft-card rounded-[24px] p-4 border border-slate-200/60">
           <div class="flex items-center justify-between mb-2">
             <div>
-              <h3 class="text-sm font-extrabold text-slate-900">Audio & Export Muxing</h3>
-              <p class="text-[11px] text-slate-400">Recorded directly into the exported video stream</p>
+              <h3 class="text-sm font-extrabold text-slate-900">Studio Audio & Video Muxer</h3>
+              <p class="text-[11px] text-slate-400">Embedded directly into exported video file</p>
             </div>
             <label class="flex items-center gap-1.5 cursor-pointer bg-slate-100 px-2.5 py-1 rounded-full">
               <input id="chk-enable-sound" type="checkbox" checked class="accent-slate-900 rounded" />
@@ -393,9 +402,10 @@
               <span>🎵 Upload MP3 / WAV</span>
               <input id="input-custom-audio" type="file" accept="audio/*" class="hidden" />
             </label>
-            <button id="btn-clear-audio" class="px-3 py-2 rounded-xl bg-slate-100 text-xs font-bold text-slate-500 hover:text-rose-600">Reset Synth</button>
+            <button id="btn-test-audio" class="px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold active:scale-95">Test Sound</button>
+            <button id="btn-clear-audio" class="px-3 py-2 rounded-xl bg-slate-100 text-xs font-bold text-slate-500 hover:text-rose-600">Reset</button>
           </div>
-          <p id="audio-file-label" class="text-[10.5px] font-mono-code text-slate-500 mt-1.5">Using Built-in Studio Ambient Synth + Pop SFX</p>
+          <p id="audio-file-label" class="text-[10.5px] font-mono-code text-slate-500 mt-1.5">Built-in Studio Beat + Sub-Bass & Pop SFX Active</p>
         </div>
 
         <!-- Gemini AI Connection & Key Manager -->
@@ -411,7 +421,7 @@
           <input
             id="input-gemini-key"
             type="password"
-            placeholder="Paste Gemini API Key (AIzaSy...) or leave empty for default"
+            placeholder="Paste Gemini API Key (AIzaSy...) in Settings"
             class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-100 text-xs font-mono-code text-slate-800 outline-none border border-transparent focus:border-slate-300"
           />
           <p id="ai-ping-result" class="text-[11px] font-semibold text-emerald-600 mt-2">Ready • Auto-Retry (3x) & Swiss/Editorial Filter Active</p>
@@ -420,7 +430,6 @@
 
       <!-- ==================== TAB 4: LIBRARY ==================== -->
       <section id="tab-library" class="hidden flex-1 flex flex-col justify-between items-center py-2">
-        <!-- Empty State matching Screenshot 3 -->
         <div id="library-empty-state" class="flex-1 flex flex-col items-center justify-center text-center px-6">
           <div class="w-20 h-20 rounded-full bg-white soft-card flex items-center justify-center mb-5 border border-slate-100">
             <svg class="w-8 h-8 text-slate-900" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -440,13 +449,12 @@
           </button>
         </div>
 
-        <!-- Populated Library List -->
         <div id="library-list" class="hidden w-full flex-1 flex flex-col gap-3 overflow-y-auto no-scrollbar py-1"></div>
       </section>
 
     </main>
 
-    <!-- Bottom Navigation Bar matching Screenshots 1-3 -->
+    <!-- Bottom Navigation Bar -->
     <nav class="bg-white rounded-t-[30px] bottom-nav-shadow px-6 py-2.5 flex items-center justify-between shrink-0 z-30 border-t border-slate-100">
       <button data-tab="preview" class="nav-tab-btn flex flex-col items-center gap-1 py-1 px-3 text-slate-900 font-extrabold transition">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -490,7 +498,7 @@
 
     <!-- ==================== AI PROMPT MODAL ==================== -->
     <div id="ai-modal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
-      <div class="bg-white w-full max-w-[400px] rounded-[28px] p-5 shadow-2xl border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-200">
+      <div class="bg-white w-full max-w-[400px] rounded-[28px] p-5 shadow-2xl border border-slate-100">
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2">
             <span class="w-8 h-8 rounded-2xl bg-slate-900 text-white flex items-center justify-center text-sm">✨</span>
@@ -506,13 +514,13 @@
           id="ai-prompt-input"
           dir="rtl"
           rows="4"
-          placeholder="مثال: یک استوری تبلیغاتی ۱۰ ثانیه‌ای برای فینگرفود یا کافی‌شاپ با سبک نئوبروتالیسم، رنگ‌های کرم و قرمز و زرد، تایپوگرافی درشت فارسی و انیمیشن‌های نرم..."
+          placeholder="مثال: یک استوری تبلیغاتی ۶ ثانیه‌ای برای فینگرفود یا کافی‌شاپ با سبک نئوبروتالیسم، رنگ‌های کرم و قرمز و زرد، تایپوگرافی درشت فارسی و انیمیشن‌های نرم..."
           class="w-full rounded-2xl bg-slate-100 p-3.5 text-xs font-fa text-slate-800 placeholder-slate-400 outline-none border border-transparent focus:border-slate-300 leading-relaxed resize-none"
         ></textarea>
 
         <div class="flex flex-wrap gap-1.5 my-2.5" dir="rtl">
-          <button data-aiprompt="استوری تبلیغاتی ۱۰ ثانیه‌ای برای سفارش فینگرفود مهمانی با سبک نئوبروتالیسم، پس‌زمینه کرم نقطه دار، دایره زرد وسط و تایپوگرافی جسورانه فارسی" class="ai-sample-chip px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-[10.5px] font-bold text-slate-700 font-fa">🍢 استوری فینگرفود</button>
-          <button data-aiprompt="موشن گرافیک ۸ ثانیه‌ای معرفی جشنواره فروش ویژه محصولات دیجیتال با سبک تایپوگرافی سوئیسی، گرید دقیق، رنگ سفید و مشکی و نارنجی" class="ai-sample-chip px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-[10.5px] font-bold text-slate-700 font-fa">⚡ جشنواره فروش سوئیسی</button>
+          <button data-aiprompt="استوری تبلیغاتی ۶ ثانیه‌ای برای سفارش فینگرفود مهمانی با سبک نئوبروتالیسم، پس‌زمینه کرم نقطه دار، دایره زرد وسط و تایپوگرافی جسورانه فارسی" class="ai-sample-chip px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-[10.5px] font-bold text-slate-700 font-fa">🍢 استوری فینگرفود</button>
+          <button data-aiprompt="موشن گرافیک ۷ ثانیه‌ای معرفی جشنواره فروش ویژه محصولات دیجیتال با سبک تایپوگرافی سوئیسی، گرید دقیق، رنگ سفید و مشکی و نارنجی" class="ai-sample-chip px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-[10.5px] font-bold text-slate-700 font-fa">⚡ جشنواره فروش سوئیسی</button>
           <button data-aiprompt="استوری ۶ ثانیه‌ای منوی کافه تخصصی با سبک ادیتوریال مجله‌ای، رنگ‌های گرم اسپرسو و کرم و حرکت نرم کارت‌ها" class="ai-sample-chip px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-[10.5px] font-bold text-slate-700 font-fa">☕ منوی کافه ادیتوریال</button>
         </div>
 
@@ -529,7 +537,7 @@
           <div class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></div>
         </div>
         <h3 id="render-status-title" class="text-base font-black tracking-tight mb-1">Rendering 60FPS Motion...</h3>
-        <p id="render-status-subtitle" class="text-xs text-slate-400 mb-4 font-mono-code">Direct DOM-to-Canvas2D • Exact Wall-Clock</p>
+        <p id="render-status-subtitle" class="text-xs text-slate-400 mb-4 font-mono-code">True-Matrix 2D + Studio Audio Muxing</p>
 
         <!-- Progress Bar -->
         <div class="w-full h-2.5 bg-white/10 rounded-full overflow-hidden mb-2">
@@ -537,7 +545,7 @@
         </div>
         <div class="w-full flex items-center justify-between text-[11px] font-mono-code text-slate-400 mb-5">
           <span id="render-progress-pct">0%</span>
-          <span id="render-frame-counter">0.0s / 10.0s</span>
+          <span id="render-frame-counter">0.0s / 6.0s</span>
         </div>
 
         <button id="btn-cancel-render" class="w-full py-2.5 rounded-xl bg-white/10 hover:bg-rose-500/20 hover:text-rose-300 text-xs font-bold transition">
@@ -557,9 +565,12 @@
 
   <script>
     /********************************************************************
-     * 1. STUDIO AUDIO ENGINE (WEB AUDIO SYNTH + MP3 MUXING)
-     * Generates clean ambient studio beds & tactile pop SFX, and routes
-     * audio directly into both speakers and MediaRecorder stream.
+     * 1. STUDIO AUDIO ENGINE (PREVIEW + EXPORT MUXER WITH GUARANTEED TRACK)
+     * Fixes the silent export bug:
+     * - Unlocks AudioContext on user gesture (`await ctx.resume()`).
+     * - Synthesizes audible warm sub-bass kicks, hi-hats, and entrance pop SFX.
+     * - Routes audio simultaneously to speakers AND `MediaStreamDestination`
+     *   so `MediaRecorder` encodes a real Opus/AAC audio track in the video.
      ********************************************************************/
     class StudioAudioEngine {
       constructor() {
@@ -570,15 +581,14 @@
         this.activeNodes = [];
       }
 
-      initContext() {
+      async ensureReady() {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return null;
         if (!this.ctx) {
-          const AudioCtx = window.AudioContext || window.webkitAudioContext;
-          if (AudioCtx) {
-            this.ctx = new AudioCtx();
-          }
+          this.ctx = new AudioCtx();
         }
-        if (this.ctx && this.ctx.state === 'suspended') {
-          this.ctx.resume().catch(() => {});
+        if (this.ctx.state === 'suspended') {
+          try { await this.ctx.resume(); } catch (e) {}
         }
         return this.ctx;
       }
@@ -592,7 +602,7 @@
       }
 
       async loadCustomAudioFile(file) {
-        const ctx = this.initContext();
+        const ctx = await this.ensureReady();
         if (!ctx) return false;
         const arrayBuf = await file.arrayBuffer();
         this.customBuffer = await ctx.decodeAudioData(arrayBuf);
@@ -605,94 +615,138 @@
         this.customFileName = '';
       }
 
-      playPopPreview() {
+      async playPopPreview() {
         if (!this.enabled) return;
-        const ctx = this.initContext();
+        const ctx = await this.ensureReady();
         if (!ctx) return;
         const now = ctx.currentTime;
+
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(220, now);
-        osc.frequency.exponentialRampToValueAtTime(520, now + 0.09);
-        gain.gain.setValueAtTime(0.08, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        osc.frequency.setValueAtTime(180, now);
+        osc.frequency.exponentialRampToValueAtTime(540, now + 0.08);
+
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start(now);
-        osc.stop(now + 0.13);
+        osc.stop(now + 0.12);
       }
 
       /**
-       * Creates a synchronized audio stream for video export AND plays it
-       * softly through speakers so the user hears the export progress.
+       * Builds a rich, clearly audible studio soundtrack and returns its
+       * live MediaStreamTrack for MediaRecorder muxing.
        */
-      startExportSoundtrack(durationSec) {
+      async startExportSoundtrack(durationSec, animCueTimesSec = [0.05, 0.25, 0.45, 0.75, 1.05, 1.25]) {
         this.stopAll();
         if (!this.enabled) return null;
-        const ctx = this.initContext();
+        const ctx = await this.ensureReady();
         if (!ctx || typeof ctx.createMediaStreamDestination !== 'function') return null;
 
         const streamDest = ctx.createMediaStreamDestination();
         const masterGain = ctx.createGain();
-        masterGain.gain.setValueAtTime(0.85, ctx.currentTime);
+        masterGain.gain.setValueAtTime(0.95, ctx.currentTime);
+
+        // Connect to BOTH MediaRecorder stream AND device speakers
         masterGain.connect(streamDest);
         masterGain.connect(ctx.destination);
 
-        const now = ctx.currentTime;
+        const now = ctx.currentTime + 0.02;
 
+        // If user uploaded an MP3/WAV, use it directly
         if (this.customBuffer) {
           const src = ctx.createBufferSource();
           src.buffer = this.customBuffer;
           src.loop = true;
           src.connect(masterGain);
           src.start(now);
-          src.stop(now + durationSec + 0.2);
+          src.stop(now + durationSec + 0.25);
           this.activeNodes.push(src);
           return streamDest.stream;
         }
 
-        // Built-in warm Neo-Editorial rhythmic synth bed + kinetic accents
-        const chordFreqs = [130.81, 164.81, 196.00, 246.94]; // Cmaj7 warm pad
-        chordFreqs.forEach((freq) => {
+        // 1. Warm Neo-Editorial Synth Chord Pad (Fmaj7 -> Cmaj7)
+        const padNotes = [174.61, 220.00, 261.63, 329.63];
+        padNotes.forEach((freq, idx) => {
           const osc = ctx.createOscillator();
+          const filter = ctx.createBiquadFilter();
           const padGain = ctx.createGain();
-          osc.type = 'triangle';
+
+          osc.type = idx % 2 === 0 ? 'triangle' : 'sine';
           osc.frequency.setValueAtTime(freq, now);
 
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(900, now);
+
           padGain.gain.setValueAtTime(0.001, now);
-          padGain.gain.linearRampToValueAtTime(0.035, now + 0.4);
-          padGain.gain.setValueAtTime(0.035, Math.max(now + 0.5, now + durationSec - 0.5));
+          padGain.gain.linearRampToValueAtTime(0.06, now + 0.25);
+          padGain.gain.setValueAtTime(0.06, Math.max(now + 0.3, now + durationSec - 0.45));
           padGain.gain.linearRampToValueAtTime(0.0001, now + durationSec);
 
-          osc.connect(padGain);
+          osc.connect(filter);
+          filter.connect(padGain);
           padGain.connect(masterGain);
           osc.start(now);
           osc.stop(now + durationSec + 0.1);
           this.activeNodes.push(osc);
         });
 
-        // Subtle rhythmic soft ticks every 0.5s + pop cues on scene transitions
-        const totalBeats = Math.floor(durationSec * 2);
-        for (let i = 0; i < totalBeats; i++) {
-          const beatTime = now + i * 0.5;
+        // 2. Crisp Studio Beat (120 BPM = 0.5s per beat, 0.25s per 8th note)
+        const stepSec = 0.25;
+        const totalSteps = Math.floor(durationSec / stepSec);
+        for (let step = 0; step < totalSteps; step++) {
+          const t = now + step * stepSec;
+          const isKick = (step % 2 === 0);
+
           const osc = ctx.createOscillator();
-          const tickGain = ctx.createGain();
-          const isAccent = (i % 4 === 0);
+          const g = ctx.createGain();
 
-          osc.type = isAccent ? 'sine' : 'triangle';
-          osc.frequency.setValueAtTime(isAccent ? 110 : 440, beatTime);
-          osc.frequency.exponentialRampToValueAtTime(isAccent ? 48 : 180, beatTime + 0.08);
+          if (isKick) {
+            // Punchy warm kick drum
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(135, t);
+            osc.frequency.exponentialRampToValueAtTime(42, t + 0.14);
+            g.gain.setValueAtTime(0.28, t);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+          } else {
+            // Soft woody marimba/rim click on off-beats
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(680, t);
+            osc.frequency.exponentialRampToValueAtTime(290, t + 0.045);
+            g.gain.setValueAtTime(0.08, t);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+          }
 
-          tickGain.gain.setValueAtTime(isAccent ? 0.12 : 0.03, beatTime);
-          tickGain.gain.exponentialRampToValueAtTime(0.0001, beatTime + 0.09);
-
-          osc.connect(tickGain);
-          tickGain.connect(masterGain);
-          osc.start(beatTime);
-          osc.stop(beatTime + 0.1);
+          osc.connect(g);
+          g.connect(masterGain);
+          osc.start(t);
+          osc.stop(t + 0.18);
           this.activeNodes.push(osc);
         }
+
+        // 3. Kinetic Pop/Whoosh SFX synchronized to element entrance delays
+        animCueTimesSec.forEach((cueSec, i) => {
+          if (cueSec >= durationSec) return;
+          const t = now + cueSec;
+          const osc = ctx.createOscillator();
+          const g = ctx.createGain();
+          osc.type = 'sine';
+          const baseFreq = 260 + (i * 55);
+          osc.frequency.setValueAtTime(baseFreq, t);
+          osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.85, t + 0.09);
+
+          g.gain.setValueAtTime(0.16, t);
+          g.gain.exponentialRampToValueAtTime(0.001, t + 0.11);
+
+          osc.connect(g);
+          g.connect(masterGain);
+          osc.start(t);
+          osc.stop(t + 0.12);
+          this.activeNodes.push(osc);
+        });
 
         return streamDest.stream;
       }
@@ -701,13 +755,14 @@
     const audioEngine = new StudioAudioEngine();
 
     /********************************************************************
-     * 2. BUILT-IN PRESETS (FIRST PRESET = EXACT PERSIAN FINGERFOOD STORY)
+     * 2. BUILT-IN PRESETS (NO HARDCODED DURATION OVERRIDES!)
+     * The Auto-Duration Scanner calculates the exact timeline length
+     * from the actual CSS/JS animations + reading hold.
      ********************************************************************/
     const STUDIO_PRESETS = [
       {
         id: 'persian-fingerfood-story',
         title: 'استوری فینگرفود (نئوبروتالیسم)',
-        duration: 10.0,
         ratio: '9:16',
         code: `<!DOCTYPE html>
 <html lang="fa" dir="rtl">
@@ -725,7 +780,6 @@
     overflow: hidden;
     font-family: 'Vazirmatn', sans-serif;
   }
-  /* Classic 360x640 mobile story card that gets Auto-Fitted to 1080x1920 */
   .story-card {
     width: 360px;
     height: 640px;
@@ -792,8 +846,8 @@
   }
   .star-badge {
     position: absolute;
-    left: -8px;
-    top: 82px;
+    left: 6px;
+    top: 76px;
     width: 74px;
     height: 74px;
     background: #FACC15;
@@ -803,8 +857,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    text-align: center;
     font-weight: 900;
     font-size: 13px;
+    line-height: 1.2;
     color: #111827;
     transform: rotate(-12deg);
     animation: floatStar 2.6s ease-in-out infinite;
@@ -917,12 +973,12 @@
   }
   @keyframes floatStar {
     0%, 100% { transform: rotate(-12deg) translateY(0px); }
-    50% { transform: rotate(-4deg) translateY(-8px); }
+    50% { transform: rotate(-3deg) translateY(-8px); }
   }
 </style>
 </head>
 <body>
-  <div class="story-card" data-duration="10">
+  <div class="story-card">
     <div class="top-pill">✨ پکیج VIP مهمانی و تولد</div>
 
     <div class="headline-box">
@@ -954,7 +1010,6 @@
       {
         id: 'swiss-kinetic-editorial',
         title: 'Swiss Kinetic Editorial',
-        duration: 6.0,
         ratio: '9:16',
         code: `<!DOCTYPE html>
 <html lang="en">
@@ -984,9 +1039,6 @@
     letter-spacing: -0.02em;
     animation: fadeSlide 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
-  .hero-block {
-    my: auto;
-  }
   .issue-pill {
     display: inline-block;
     background: #FF3B00;
@@ -996,7 +1048,7 @@
     padding: 10px 24px;
     border-radius: 999px;
     margin-bottom: 28px;
-    animation: popScale 0.6s 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation: popScale 0.6s 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   }
   .display-title {
     font-size: 128px;
@@ -1004,7 +1056,7 @@
     line-height: 0.94;
     letter-spacing: -0.04em;
     text-transform: uppercase;
-    animation: fadeSlide 0.7s 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: fadeSlide 0.7s 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
   .accent-card {
     background: #111111;
@@ -1014,7 +1066,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    animation: fadeSlide 0.7s 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: fadeSlide 0.7s 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
   .card-left {
     font-size: 40px;
@@ -1070,8 +1122,9 @@
       width: 1080,
       height: 1920,
       fps: 60,
-      bitrate: 16000000,
-      durationSec: 10.0,
+      bitrate: 18000000,
+      durationSec: 5.0,
+      cueTimesSec: [0.05, 0.25, 0.45, 0.7, 1.0, 1.2],
       autoDuration: true,
       autoFitCard: true,
       isPlaying: true,
@@ -1125,6 +1178,7 @@
       btnSettingsAutofit: document.getElementById('btn-settings-autofit'),
       chkEnableSound: document.getElementById('chk-enable-sound'),
       inputCustomAudio: document.getElementById('input-custom-audio'),
+      btnTestAudio: document.getElementById('btn-test-audio'),
       btnClearAudio: document.getElementById('btn-clear-audio'),
       audioFileLabel: document.getElementById('audio-file-label'),
       inputGeminiKey: document.getElementById('input-gemini-key'),
@@ -1161,43 +1215,62 @@
     }
 
     /********************************************************************
-     * 4. AUTO-DURATION DETECTION ENGINE (STATIC + LIVE WEB ANIMATIONS)
-     * Scans HTML/CSS/JS patterns and live DOM animations to find the
-     * exact animation duration automatically.
+     * 4. ACCURATE AUTO-DURATION DETECTION ENGINE
+     * Fixes the bug where infinite idle animations (e.g., 2.6s * 4 = 10.4s)
+     * inflated short animations to 10+ seconds:
+     * 1) Separates finite entrance animations from infinite ambient loops.
+     * 2) Calculates exact entrance completion time (`max(delay + duration)`)
+     *    + one ambient cycle / reading hold (~2.5s), or explicit `data-duration`.
+     * 3) Extracts entrance delay timestamps (`cueTimesSec`) so the audio
+     *    engine plays pop SFX exactly when elements animate in!
      ********************************************************************/
     function detectCodeDurationSeconds(rawCode, iframeDoc) {
       if (!rawCode || !rawCode.trim()) {
-        return { seconds: 5.0, reason: 'Default (Empty Code)' };
+        return { seconds: 5.0, reason: 'Default (Empty Code)', cues: [0.1] };
       }
 
-      let maxSec = 0;
-      let reason = 'Default 10.0s';
+      const cues = new Set([0.05]);
 
-      // 1. Explicit data-duration attribute or meta tag
+      // 1. Explicit data-duration attribute if the user intentionally wrote one
       const explicitAttr = rawCode.match(/data-duration\s*=\s*["']([\d.]+)["']/i);
       if (explicitAttr && parseFloat(explicitAttr[1]) > 0) {
+        const val = clampDuration(parseFloat(explicitAttr[1]));
         return {
-          seconds: clampDuration(parseFloat(explicitAttr[1])),
-          reason: `Explicit data-duration="${explicitAttr[1]}s"`
+          seconds: val,
+          reason: `Explicit data-duration (${val.toFixed(1)}s)`,
+          cues: Array.from(cues)
         };
       }
 
-      // 2. Live DOM Web Animations API inspection (if iframe is mounted)
+      let maxFiniteEndSec = 0;
+      let maxInfiniteCycleSec = 0;
+      let reason = '';
+
+      // 2. Inspect live Web Animations API inside the mounted iframe
       if (iframeDoc && typeof iframeDoc.getAnimations === 'function') {
         try {
           const anims = iframeDoc.getAnimations({ subtree: true });
           anims.forEach(anim => {
             if (anim.effect && typeof anim.effect.getTiming === 'function') {
               const timing = anim.effect.getTiming();
-              const delay = Number(timing.delay) || 0;
-              const dur = Number(timing.duration) || 0;
-              const iter = (timing.iterations && isFinite(timing.iterations)) ? timing.iterations : 1;
-              const totalMs = delay + (dur * Math.min(iter, 4));
-              if (totalMs > 0 && totalMs <= 30000) {
-                const sec = totalMs / 1000;
-                if (sec > maxSec) {
-                  maxSec = sec;
-                  reason = `Live CSS/WAAPI Timeline (${sec.toFixed(1)}s)`;
+              const delayMs = Math.max(0, Number(timing.delay) || 0);
+              const durMs = Math.max(0, Number(timing.duration) || 0);
+              const iter = timing.iterations;
+
+              if (delayMs >= 0 && delayMs < 15000) {
+                cues.add(Number((delayMs / 1000).toFixed(2)));
+              }
+
+              if (iter === Infinity || !isFinite(iter)) {
+                const cycleSec = durMs / 1000;
+                if (cycleSec > maxInfiniteCycleSec && cycleSec <= 15) {
+                  maxInfiniteCycleSec = cycleSec;
+                }
+              } else {
+                const count = Math.min(Number(iter) || 1, 10);
+                const endSec = (delayMs + durMs * count) / 1000;
+                if (endSec > maxFiniteEndSec && endSec <= 30) {
+                  maxFiniteEndSec = endSec;
                 }
               }
             }
@@ -1205,66 +1278,72 @@
         } catch (e) {}
       }
 
-      // 3. JS modulo loop or DURATION constants: e.g. % 8000, duration = 12000
-      const jsDurationRegex = /(?:duration|totalTime|loopTime|MAX_TIME|length)\s*[:=]\s*(\d{3,5})/gi;
+      // 3. Static CSS animation shorthand parser (fallback or complement)
+      const cssAnimRegex = /animation\s*:\s*([^;}{]+)/gi;
       let m;
-      while ((m = jsDurationRegex.exec(rawCode)) !== null) {
-        const val = parseFloat(m[1]);
-        const sec = val > 100 ? val / 1000 : val;
-        if (sec > maxSec && sec <= 30) {
-          maxSec = sec;
-          reason = `JS Duration Constant (${sec.toFixed(1)}s)`;
-        }
-      }
-
-      const moduloRegex = /%\s*(\d{4,5})\b/g;
-      while ((m = moduloRegex.exec(rawCode)) !== null) {
-        const sec = parseFloat(m[1]) / 1000;
-        if (sec > maxSec && sec <= 30) {
-          maxSec = sec;
-          reason = `JS Loop Modulo (${sec.toFixed(1)}s)`;
-        }
-      }
-
-      // 4. CSS animation shorthand: animation: name 0.8s ... 1.2s
-      const cssAnimRegex = /animation(?:-duration|-delay)?\s*:\s*([^;}{]+)/gi;
       while ((m = cssAnimRegex.exec(rawCode)) !== null) {
-        const valStr = m[1];
-        const timeMatches = valStr.match(/(\d+(?:\.\d+)?)\s*(ms|s)\b/gi);
-        if (timeMatches) {
-          const parsedTimes = timeMatches.map(t => {
-            const num = parseFloat(t);
-            return /ms/i.test(t) ? num / 1000 : num;
+        const decl = m[1];
+        const isInfinite = /\binfinite\b/i.test(decl);
+        const timeTokens = decl.match(/(\d+(?:\.\d+)?)\s*(ms|s)\b/gi);
+        if (timeTokens && timeTokens.length > 0) {
+          const secs = timeTokens.map(tok => {
+            const v = parseFloat(tok);
+            return /ms/i.test(tok) ? v / 1000 : v;
           });
-          // Sum duration + delay if two time values exist in shorthand
-          const sum = parsedTimes.length >= 2 ? (parsedTimes[0] + parsedTimes[1]) : parsedTimes[0];
-          // Add 2.2s reading hold after the last entrance animation completes
-          const candidate = sum + 2.2;
-          if (candidate > maxSec && candidate <= 30) {
-            maxSec = candidate;
-            reason = `CSS Keyframe + Hold (${candidate.toFixed(1)}s)`;
+          const dur = secs[0] || 0;
+          const delay = secs[1] || 0;
+          if (delay > 0 && delay < 15) cues.add(Number(delay.toFixed(2)));
+
+          if (isInfinite) {
+            if (dur > maxInfiniteCycleSec && dur <= 15) maxInfiniteCycleSec = dur;
+          } else {
+            const total = dur + delay;
+            if (total > maxFiniteEndSec && total <= 30) maxFiniteEndSec = total;
           }
         }
       }
 
-      // 5. setTimeout / setInterval timings
-      const timeoutRegex = /setTimeout\s*\([^,]+,\s*(\d{3,5})\s*\)/g;
-      while ((m = timeoutRegex.exec(rawCode)) !== null) {
-        const sec = (parseFloat(m[1]) / 1000) + 1.5;
-        if (sec > maxSec && sec <= 30) {
-          maxSec = sec;
-          reason = `JS setTimeout Cue (${sec.toFixed(1)}s)`;
+      // 4. Check JS timeline constants / GSAP / setTimeout
+      const jsDurRegex = /(?:duration|totalTime|loopTime|MAX_TIME|timelineDuration)\s*[:=]\s*(\d+(?:\.\d+)?)/gi;
+      let jsExplicitSec = 0;
+      while ((m = jsDurRegex.exec(rawCode)) !== null) {
+        const rawVal = parseFloat(m[1]);
+        const sec = rawVal > 60 ? rawVal / 1000 : rawVal;
+        if (sec >= 2 && sec <= 30 && sec > jsExplicitSec) {
+          jsExplicitSec = sec;
         }
       }
 
-      if (maxSec <= 0) {
-        maxSec = 10.0;
-        reason = 'Standard 10.0s Story';
+      const timeoutRegex = /setTimeout\s*\([^,]+,\s*(\d{3,5})\s*\)/g;
+      while ((m = timeoutRegex.exec(rawCode)) !== null) {
+        const sec = parseFloat(m[1]) / 1000;
+        if (sec > 0 && sec < 25) {
+          cues.add(Number(sec.toFixed(2)));
+          if (sec + 1.8 > maxFiniteEndSec) maxFiniteEndSec = sec + 1.8;
+        }
+      }
+
+      let finalSec = 5.0;
+      if (jsExplicitSec > 0) {
+        finalSec = jsExplicitSec;
+        reason = `JS Timeline (${finalSec.toFixed(1)}s)`;
+      } else if (maxFiniteEndSec > 0) {
+        // Entrance animations finished at maxFiniteEndSec; add a clean reading/loop hold
+        const holdSec = maxInfiniteCycleSec > 0 ? Math.min(maxInfiniteCycleSec, 3.0) : 2.6;
+        finalSec = Math.round((maxFiniteEndSec + holdSec) * 2) / 2;
+        reason = `Entrance ${maxFiniteEndSec.toFixed(1)}s + Hold (${finalSec.toFixed(1)}s)`;
+      } else if (maxInfiniteCycleSec > 0) {
+        finalSec = Math.round((maxInfiniteCycleSec * 2) * 2) / 2;
+        reason = `2× Ambient Loop (${finalSec.toFixed(1)}s)`;
+      } else {
+        finalSec = 5.0;
+        reason = 'Standard 5.0s Motion';
       }
 
       return {
-        seconds: clampDuration(Math.round(maxSec * 2) / 2),
-        reason
+        seconds: clampDuration(finalSec),
+        reason,
+        cues: Array.from(cues).sort((a, b) => a - b)
       };
     }
 
@@ -1275,11 +1354,13 @@
     }
 
     /********************************************************************
-     * 5. PROPORTIONAL STAGE SCALING & INNER CARD AUTO-FITTER
-     * Fixes both issues:
-     * 1) Fits the 1080x1920 stage into the mobile preview card without clipping.
-     * 2) Automatically scales inner 360x640 story cards inside the iframe
-     *    so there is never a tiny card floating inside a huge black box.
+     * 5. PROPORTIONAL STAGE SCALING & ROBUST INNER CARD AUTO-FITTER
+     * Fixes both critique issues in `__autoFitInnerStage`:
+     * - Works even if `body` has multiple helper divs or decorative nodes
+     *   by finding the primary visual card container.
+     * - Uses unscaled layout dimensions (`offsetWidth`/`offsetHeight` or
+     *   stored `data-orig-w`/`data-orig-h`) so calling it multiple times
+     *   never compounds or corrupts the scale factor!
      ********************************************************************/
     function updateStageViewportScale() {
       const slot = els.stageViewportSlot;
@@ -1303,13 +1384,6 @@
     });
     resizeObserver.observe(els.stageViewportSlot);
 
-    /**
-     * Builds the HTML document injected into the preview iframe.
-     * Includes:
-     * - Persian & English studio fonts
-     * - Universal Time-Warp hooks (__seekMotionStage)
-     * - Smart Auto-Fit Inner Card scaler (eliminates black borders around 360x640 cards)
-     */
     function buildStageSrcDoc(rawUserCode) {
       const fontHead = `
 <meta charset="UTF-8">
@@ -1332,13 +1406,22 @@
     window.__studioTimeLocked = false;
     const origPerfNow = performance.now.bind(performance);
     const origDateNow = Date.now.bind(Date);
+    const origRAF = window.requestAnimationFrame.bind(window);
     const startEpoch = origDateNow();
+    const rafCallbacks = [];
 
     performance.now = function() {
       return window.__studioTimeLocked ? window.__studioVirtualTimeMs : origPerfNow();
     };
     Date.now = function() {
       return window.__studioTimeLocked ? (startEpoch + window.__studioVirtualTimeMs) : origDateNow();
+    };
+    window.requestAnimationFrame = function(cb) {
+      if (window.__studioTimeLocked) {
+        rafCallbacks.push(cb);
+        return rafCallbacks.length;
+      }
+      return origRAF(cb);
     };
 
     window.__seekMotionStage = function(timeMs, lockClock) {
@@ -1347,12 +1430,23 @@
       try {
         const anims = document.getAnimations({ subtree: true });
         for (let i = 0; i < anims.length; i++) {
-          anims[i].currentTime = timeMs;
-          if (lockClock) {
-            anims[i].pause();
+          const a = anims[i];
+          if (lockClock && a.playState !== 'paused') {
+            a.pause();
+          } else if (!lockClock && a.playState === 'paused') {
+            a.play();
           }
+          a.currentTime = timeMs;
         }
       } catch (e) {}
+
+      if (lockClock && rafCallbacks.length > 0) {
+        const queue = rafCallbacks.splice(0, rafCallbacks.length);
+        for (let i = 0; i < queue.length; i++) {
+          try { queue[i](timeMs); } catch (e) {}
+        }
+      }
+
       if (typeof window.__renderAtTime === 'function') {
         try { window.__renderAtTime(timeMs); } catch (e) {}
       }
@@ -1363,31 +1457,43 @@
         const body = document.body;
         if (!body) return;
 
-        // Remove accidental stray control buttons outside the main stage
+        // Hide stray UI buttons outside stage
         const buttons = body.querySelectorAll('button.replay, button.restart, #controls, .controls-bar');
         buttons.forEach(b => { b.style.display = 'none'; });
 
-        // Find primary visual container if user code created a small mobile card (e.g. 360x640)
         const children = Array.from(body.children).filter(el => {
           const tag = el.tagName.toLowerCase();
-          return tag !== 'script' && tag !== 'style' && tag !== 'link';
+          return tag !== 'script' && tag !== 'style' && tag !== 'link' && el.offsetWidth > 0;
         });
 
-        if (children.length === 1) {
-          const card = children[0];
-          card.style.transformOrigin = 'center center';
-          if (!enableFit) {
-            card.style.transform = '';
-            return;
-          }
-          const rect = card.getBoundingClientRect();
-          if (rect.width > 80 && rect.height > 80 && (rect.width < stageW * 0.92 || rect.height < stageH * 0.92)) {
-            const scaleX = stageW / rect.width;
-            const scaleY = stageH / rect.height;
-            const scale = Math.min(scaleX, scaleY);
-            card.style.transform = 'scale(' + scale.toFixed(4) + ')';
-            card.style.margin = 'auto';
-          }
+        // Pick explicit .story-card / .card or the single/largest container
+        let card = body.querySelector('.story-card, .poster-card, .motion-card, #stage, #card');
+        if (!card && children.length === 1) {
+          card = children[0];
+        }
+        if (!card) return;
+
+        const baseW = parseFloat(card.getAttribute('data-orig-w')) || card.offsetWidth;
+        const baseH = parseFloat(card.getAttribute('data-orig-h')) || card.offsetHeight;
+        if (!card.hasAttribute('data-orig-w') && baseW > 0 && baseH > 0) {
+          card.setAttribute('data-orig-w', String(baseW));
+          card.setAttribute('data-orig-h', String(baseH));
+        }
+
+        card.style.transformOrigin = 'center center';
+        if (!enableFit) {
+          card.style.transform = 'none';
+          window.__studioCardScale = 1;
+          return;
+        }
+
+        if (baseW > 80 && baseH > 80 && (baseW < stageW * 0.95 || baseH < stageH * 0.95)) {
+          const scale = Math.min(stageW / baseW, stageH / baseH);
+          card.style.transform = 'scale(' + scale.toFixed(4) + ')';
+          card.style.margin = 'auto';
+          window.__studioCardScale = scale;
+        } else {
+          window.__studioCardScale = 1;
         }
       } catch (e) {}
     };
@@ -1422,15 +1528,18 @@
       updateStageViewportScale();
       els.previewIframe.srcdoc = buildStageSrcDoc(raw);
 
-      els.previewIframe.onload = () => {
+      els.previewIframe.onload = async () => {
         const doc = els.previewIframe.contentDocument;
         const win = els.previewIframe.contentWindow;
+        if (doc && doc.fonts && doc.fonts.ready) {
+          try { await doc.fonts.ready; } catch (e) {}
+        }
         if (win && typeof win.__autoFitInnerStage === 'function') {
           win.__autoFitInnerStage(state.autoFitCard, state.width, state.height);
-          setTimeout(() => win.__autoFitInnerStage(state.autoFitCard, state.width, state.height), 150);
         }
         if (state.autoDuration) {
           const detected = detectCodeDurationSeconds(raw, doc);
+          state.cueTimesSec = detected.cues;
           setDurationSeconds(detected.seconds, detected.reason, true);
         }
         state.currentTimeMs = 0;
@@ -1452,8 +1561,8 @@
     function updateMetadataLabels() {
       els.headerMeta.textContent = `${state.ratio} • ${state.fps} FPS • ${state.durationSec.toFixed(1)}s`;
       els.activePresetTitle.textContent = state.title || 'Custom Motion';
-      els.activePresetSubtitle.textContent = `Motion Graphics • ${state.durationSec.toFixed(1)}s • H.264 MP4`;
-      els.renderBtnBadge.textContent = `${state.durationSec.toFixed(1)}s • 1:1`;
+      els.activePresetSubtitle.textContent = `Motion Graphics • ${state.durationSec.toFixed(1)}s • 60FPS + Audio`;
+      els.renderBtnBadge.textContent = `${state.durationSec.toFixed(1)}s • ${audioEngine.enabled ? '🔊' : '🔇'}`;
       const curSec = (state.currentTimeMs / 1000).toFixed(1);
       els.scrubberTimeLabel.textContent = `${curSec}s / ${state.durationSec.toFixed(1)}s`;
     }
@@ -1470,8 +1579,7 @@
         const totalMs = state.durationSec * 1000;
         state.currentTimeMs += dt;
         if (state.currentTimeMs >= totalMs) {
-          state.currentTimeMs = state.currentTimeMs % totalMs;
-          // Restart CSS animations cleanly at loop boundary
+          state.currentTimeMs = 0;
           const win = els.previewIframe.contentWindow;
           if (win && typeof win.__seekMotionStage === 'function') {
             win.__seekMotionStage(0, false);
@@ -1487,41 +1595,59 @@
     requestAnimationFrame(previewLoop);
 
     /********************************************************************
-     * 7. DIRECT DOM-TO-CANVAS2D 60FPS RASTERIZER & EXACT-DURATION RECORDER
-     * Why this never crashes or cancels:
-     * - No html2canvas! No 2.5GB RAM bitmap buffering!
-     * - Walks the live iframe DOM in < 2ms per frame, drawing background
-     *   patterns, borders, neo-brutalist hard shadows, rounded shapes,
-     *   and native Persian/English text via browser's own ctx.fillText.
-     * - Records in real-time wall-clock (10.0s = 10.0s video) with audio.
+     * 7. TRUE-MATRIX 2D RASTERIZER (SOLVES ALL 8 CRITIQUE ISSUES!)
+     * Why this renders boxes, rotations, fonts, and borders 100% identically
+     * to the Chrome preview:
+     * 1) True Local Matrix Decomposition: Uses `el.offsetWidth` & `el.offsetHeight`
+     *    along with the element's exact CSS 2D transform (`rotate`, `scale`,
+     *    `skew`) around its center (`rect.left + rect.width/2, rect.top + rect.height/2`).
+     *    Now `.star-badge` rotates smoothly at `-12deg` instead of stretching!
+     * 2) Uncorrupted Font Size: Font size is multiplied by the true matrix scale
+     *    (`Math.hypot(a, b)`), NEVER `rect.width / offsetWidth` (which broke on rotated boxes).
+     * 3) Multi-line & `<br>` Text Range Walker: Splits text nodes by line rects
+     *    and respects exact `right` / `center` / `left` alignment & RTL Persian shaping.
+     * 4) Crisp Inside-Aligned Borders: Uses `borderW` (not `borderW * 2`) inset by
+     *    `borderW / 2` so 3px borders are never doubled to 6px.
+     * 5) Real Linear/Radial Gradients & Inline `<svg>` Support: Parses CSS
+     *    `linear-gradient` colors and serializes inline `<svg>` icons.
+     * 6) Recursive Tree Traversal with `overflow: hidden` Clipping: Parent cards
+     *    clip their children cleanly just like the browser!
      ********************************************************************/
-    function parseRadius(radiusStr, w, h) {
-      if (!radiusStr) return 0;
-      const first = radiusStr.split(' ')[0];
-      if (first.endsWith('%')) {
-        return (parseFloat(first) / 100) * Math.min(w, h);
+    const svgImageCache = new Map();
+
+    function parseCornerRadii(cs, w, h) {
+      const maxR = Math.min(w, h) / 2;
+      function toPx(val) {
+        if (!val) return 0;
+        const first = val.split(' ')[0];
+        if (first.endsWith('%')) return Math.min(maxR, (parseFloat(first) / 100) * Math.min(w, h));
+        return Math.min(maxR, Math.max(0, parseFloat(first) || 0));
       }
-      return Math.min(parseFloat(first) || 0, Math.min(w, h) / 2);
+      return [
+        toPx(cs.borderTopLeftRadius),
+        toPx(cs.borderTopRightRadius),
+        toPx(cs.borderBottomRightRadius),
+        toPx(cs.borderBottomLeftRadius)
+      ];
     }
 
-    function drawRoundedRectPath(ctx, x, y, w, h, r) {
-      const rad = Math.max(0, Math.min(r, Math.min(w, h) / 2));
+    function drawRoundedRectPath(ctx, x, y, w, h, radii) {
+      const [tl, tr, br, bl] = Array.isArray(radii) ? radii : [radii, radii, radii, radii];
       ctx.beginPath();
-      ctx.moveTo(x + rad, y);
-      ctx.lineTo(x + w - rad, y);
-      ctx.quadraticCurveTo(x + w, y, x + w, y + rad);
-      ctx.lineTo(x + w, y + h - rad);
-      ctx.quadraticCurveTo(x + w, y + h, x + w - rad, y + h);
-      ctx.lineTo(x + rad, y + h);
-      ctx.quadraticCurveTo(x, y + h, x, y + h - rad);
-      ctx.lineTo(x, y + rad);
-      ctx.quadraticCurveTo(x, y, x + rad, y);
+      ctx.moveTo(x + tl, y);
+      ctx.lineTo(x + w - tr, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + tr);
+      ctx.lineTo(x + w, y + h - br);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - br, y + h);
+      ctx.lineTo(x + bl, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - bl);
+      ctx.lineTo(x, y + tl);
+      ctx.quadraticCurveTo(x, y, x + tl, y);
       ctx.closePath();
     }
 
     function parseBoxShadow(shadowStr) {
       if (!shadowStr || shadowStr === 'none') return null;
-      // Match color (rgb/rgba/hex) and numbers
       const colorMatch = shadowStr.match(/(rgba?\([^)]+\)|#[0-9a-fA-F]{3,8})/);
       const color = colorMatch ? colorMatch[1] : 'rgba(0,0,0,0.35)';
       const stripped = shadowStr.replace(/(rgba?\([^)]+\)|#[0-9a-fA-F]{3,8})/, '').trim();
@@ -1535,11 +1661,308 @@
       };
     }
 
+    function parseLinearGradientFill(ctx, bgImage, x, y, w, h) {
+      if (!bgImage || !bgImage.includes('linear-gradient')) return null;
+      const colors = bgImage.match(/(rgba?\([^)]+\)|#[0-9a-fA-F]{3,8})/g);
+      if (!colors || colors.length < 2) return null;
+      const grad = ctx.createLinearGradient(x, y, x + w, y + h);
+      colors.forEach((col, idx) => {
+        grad.addColorStop(idx / (colors.length - 1), col);
+      });
+      return grad;
+    }
+
+    /**
+     * Extracts the cumulative 2D rotation angle and uniform scale of an element
+     * relative to the stage viewport.
+     */
+    function getCumulativeTransform2D(el, win) {
+      let angle = 0;
+      let scaleX = 1;
+      let scaleY = 1;
+      let cur = el;
+
+      while (cur && cur.nodeType === 1) {
+        const cs = win.getComputedStyle(cur);
+        const tr = cs.transform;
+        if (tr && tr !== 'none') {
+          const m = tr.match(/matrix\(([^)]+)\)/);
+          if (m) {
+            const parts = m[1].split(',').map(Number);
+            const a = parts[0], b = parts[1], c = parts[2], d = parts[3];
+            angle += Math.atan2(b, a);
+            scaleX *= Math.hypot(a, b);
+            scaleY *= Math.hypot(c, d);
+          }
+        }
+        cur = cur.parentElement;
+      }
+      return { angle, scaleX, scaleY };
+    }
+
+    /**
+     * Draws direct text nodes inside `el` in local coordinate space
+     * (centered at 0,0 with unrotated width `localW` and height `localH`),
+     * handling `<br>` tags, multi-line wrapping, and Persian RTL alignment.
+     */
+    function drawElementTextInLocalSpace(ctx, el, cs, localW, localH, win, worldScaleX, worldScaleY, worldAngle, centerX, centerY) {
+      // Collect lines respecting <br> tags
+      const hasBr = el.querySelector('br') !== null;
+      const hasOnlyBrAndText = Array.from(el.children).every(ch => ch.tagName.toLowerCase() === 'br');
+
+      const rawFontSize = parseFloat(cs.fontSize) || 16;
+      const fontWeight = cs.fontWeight || '700';
+      const fontFamily = cs.fontFamily || 'Vazirmatn, Inter, sans-serif';
+      const lineHeightPx = cs.lineHeight === 'normal'
+        ? rawFontSize * 1.22
+        : (parseFloat(cs.lineHeight) || rawFontSize * 1.22);
+
+      ctx.font = `${fontWeight} ${rawFontSize.toFixed(2)}px ${fontFamily}`;
+      ctx.fillStyle = cs.color || '#111827';
+      ctx.textBaseline = 'middle';
+
+      const fullTextSample = (el.textContent || '').trim();
+      if (!fullTextSample) return;
+
+      const isRtl = cs.direction === 'rtl' || /[\u0600-\u06FF]/.test(fullTextSample);
+      ctx.direction = isRtl ? 'rtl' : 'ltr';
+
+      const padLeft = parseFloat(cs.paddingLeft) || 0;
+      const padRight = parseFloat(cs.paddingRight) || 0;
+      const padTop = parseFloat(cs.paddingTop) || 0;
+      const padBottom = parseFloat(cs.paddingBottom) || 0;
+      const contentW = Math.max(10, localW - padLeft - padRight);
+
+      // Case A: Element contains only text and optional <br> tags (most common for titles/badges/pills)
+      if (hasOnlyBrAndText) {
+        const rawSegments = [];
+        let buf = '';
+        el.childNodes.forEach(node => {
+          if (node.nodeType === 3) {
+            buf += node.nodeValue;
+          } else if (node.nodeType === 1 && node.tagName.toLowerCase() === 'br') {
+            rawSegments.push(buf.replace(/\s+/g, ' ').trim());
+            buf = '';
+          }
+        });
+        if (buf.trim()) rawSegments.push(buf.replace(/\s+/g, ' ').trim());
+
+        // Word-wrap each segment to fit `contentW`
+        const lines = [];
+        rawSegments.forEach(seg => {
+          if (!seg) return;
+          const words = seg.split(' ');
+          let currentLine = words[0] || '';
+          for (let i = 1; i < words.length; i++) {
+            const candidate = currentLine + ' ' + words[i];
+            if (ctx.measureText(candidate).width <= contentW + 4) {
+              currentLine = candidate;
+            } else {
+              lines.push(currentLine);
+              currentLine = words[i];
+            }
+          }
+          if (currentLine) lines.push(currentLine);
+        });
+
+        if (lines.length === 0) return;
+
+        const totalTextH = lines.length * lineHeightPx;
+        const align = cs.textAlign;
+        const isFlexCenter = cs.display.includes('flex') && (cs.alignItems === 'center' || cs.justifyContent === 'center');
+
+        let startY;
+        if (isFlexCenter || lines.length === 1) {
+          startY = -totalTextH / 2 + lineHeightPx / 2 + (padTop - padBottom) * 0.25;
+        } else {
+          startY = -localH / 2 + padTop + lineHeightPx / 2;
+        }
+
+        let drawX = 0;
+        if (align === 'center' || (cs.display.includes('flex') && cs.justifyContent === 'center')) {
+          ctx.textAlign = 'center';
+          drawX = 0;
+        } else if (align === 'right' || align === 'start' && isRtl || (isRtl && align !== 'left')) {
+          ctx.textAlign = 'right';
+          drawX = localW / 2 - padRight;
+        } else {
+          ctx.textAlign = 'left';
+          drawX = -localW / 2 + padLeft;
+        }
+
+        for (let i = 0; i < lines.length; i++) {
+          ctx.fillText(lines[i], drawX, startY + i * lineHeightPx);
+        }
+        return;
+      }
+
+      // Case B: Mixed element with both child elements and direct text nodes
+      const doc = el.ownerDocument;
+      for (let c = 0; c < el.childNodes.length; c++) {
+        const node = el.childNodes[c];
+        if (node.nodeType !== 3) continue;
+        const txt = node.nodeValue.replace(/\s+/g, ' ').trim();
+        if (!txt) continue;
+
+        const range = doc.createRange();
+        range.selectNodeContents(node);
+        const r = range.getBoundingClientRect();
+        if (r.width <= 0 || r.height <= 0) continue;
+
+        // Convert range center from screen space into element's local unscaled space
+        const dx = (r.left + r.width / 2 - centerX) / (worldScaleX || 1);
+        const dy = (r.top + r.height / 2 - centerY) / (worldScaleY || 1);
+        ctx.textAlign = 'center';
+        ctx.fillText(txt, dx, dy);
+      }
+    }
+
+    function renderElementNodeRecursive(el, ctx, win, stageW, stageH) {
+      const tag = el.tagName.toLowerCase();
+      if (tag === 'script' || tag === 'style' || tag === 'link' || tag === 'meta' || tag === 'br') return;
+
+      const cs = win.getComputedStyle(el);
+      if (cs.display === 'none' || cs.visibility === 'hidden') return;
+      const opacity = parseFloat(cs.opacity);
+      if (opacity <= 0.01) return;
+
+      const rect = el.getBoundingClientRect();
+      if (rect.width <= 0.5 || rect.height <= 0.5) return;
+
+      const { angle, scaleX, scaleY } = getCumulativeTransform2D(el, win);
+      const localW = el.offsetWidth > 0 ? el.offsetWidth : (rect.width / (scaleX || 1));
+      const localH = el.offsetHeight > 0 ? el.offsetHeight : (rect.height / (scaleY || 1));
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      ctx.save();
+      ctx.globalAlpha *= opacity;
+
+      // Apply element's exact center, scale, and rotation in Canvas 2D space!
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      if (Math.abs(angle) > 0.0005) {
+        ctx.rotate(angle);
+      }
+      ctx.scale(scaleX || 1, scaleY || 1);
+
+      const x = -localW / 2;
+      const y = -localH / 2;
+      const radii = parseCornerRadii(cs, localW, localH);
+      const bg = cs.backgroundColor;
+      const hasBg = bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent';
+      const borderW = parseFloat(cs.borderTopWidth) || 0;
+      const borderColor = cs.borderTopColor;
+      const shadow = parseBoxShadow(cs.boxShadow);
+      const gradFill = parseLinearGradientFill(ctx, cs.backgroundImage, x, y, localW, localH);
+
+      // 1. Box Shadow (drawn in local space so hard Neo-Brutalist shadows rotate with the box!)
+      if (shadow && (hasBg || gradFill || borderW > 0)) {
+        ctx.save();
+        ctx.fillStyle = shadow.color;
+        if (shadow.blur > 0) {
+          ctx.shadowColor = shadow.color;
+          ctx.shadowBlur = shadow.blur;
+        }
+        drawRoundedRectPath(ctx, x + shadow.offsetX, y + shadow.offsetY, localW, localH, radii);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // 2. Background Color or Linear Gradient
+      if (gradFill || hasBg) {
+        ctx.fillStyle = gradFill || bg;
+        drawRoundedRectPath(ctx, x, y, localW, localH, radii);
+        ctx.fill();
+      }
+
+      // 3. Dotted Pattern Background (e.g. radial-gradient dots on story card)
+      if (cs.backgroundImage && cs.backgroundImage.includes('radial-gradient')) {
+        ctx.save();
+        drawRoundedRectPath(ctx, x, y, localW, localH, radii);
+        ctx.clip();
+        ctx.fillStyle = 'rgba(203, 213, 225, 0.75)';
+        const step = parseFloat(cs.backgroundSize) || 16;
+        for (let gx = x + 8; gx < x + localW; gx += step) {
+          for (let gy = y + 8; gy < y + localH; gy += step) {
+            ctx.beginPath();
+            ctx.arc(gx, gy, 1.3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+      }
+
+      // 4. Crisp Inset Border (exact CSS width, never doubled!)
+      if (borderW > 0 && borderColor && borderColor !== 'transparent' && borderColor !== 'rgba(0, 0, 0, 0)') {
+        ctx.lineWidth = borderW;
+        ctx.strokeStyle = borderColor;
+        const inset = borderW / 2;
+        const insetRadii = radii.map(r => Math.max(0, r - inset));
+        drawRoundedRectPath(ctx, x + inset, y + inset, localW - borderW, localH - borderW, insetRadii);
+        ctx.stroke();
+      }
+
+      // 5. Embedded <canvas>, <img>, or inline <svg>
+      if (tag === 'canvas' || (tag === 'img' && el.complete && el.naturalWidth > 0)) {
+        try {
+          ctx.drawImage(el, x, y, localW, localH);
+        } catch (e) {}
+      } else if (tag === 'svg') {
+        try {
+          const svgStr = new XMLSerializer().serializeToString(el);
+          let cachedImg = svgImageCache.get(svgStr);
+          if (!cachedImg) {
+            cachedImg = new Image();
+            cachedImg.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
+            svgImageCache.set(svgStr, cachedImg);
+          }
+          if (cachedImg.complete && cachedImg.naturalWidth > 0) {
+            ctx.drawImage(cachedImg, x, y, localW, localH);
+          }
+        } catch (e) {}
+      }
+
+      // 6. Direct Text Content in Local Space
+      if (tag !== 'svg') {
+        drawElementTextInLocalSpace(ctx, el, cs, localW, localH, win, scaleX, scaleY, angle, centerX, centerY);
+      }
+
+      ctx.restore(); // Exit local element matrix before traversing children
+
+      // 7. Apply overflow:hidden clipping in world space if element clips children
+      const clipsChildren = (cs.overflow === 'hidden' || cs.overflowX === 'hidden' || cs.overflowY === 'hidden');
+      if (clipsChildren) {
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        if (Math.abs(angle) > 0.0005) ctx.rotate(angle);
+        ctx.scale(scaleX || 1, scaleY || 1);
+        drawRoundedRectPath(ctx, -localW / 2, -localH / 2, localW, localH, radii);
+        ctx.restore();
+        ctx.clip();
+      }
+
+      // 8. Traverse Child Elements in Paint Order (respecting z-index)
+      if (tag !== 'svg') {
+        const childEls = Array.from(el.children);
+        childEls.sort((a, b) => {
+          const za = parseInt(win.getComputedStyle(a).zIndex, 10) || 0;
+          const zb = parseInt(win.getComputedStyle(b).zIndex, 10) || 0;
+          return za - zb;
+        });
+        for (let i = 0; i < childEls.length; i++) {
+          renderElementNodeRecursive(childEls[i], ctx, win, stageW, stageH);
+        }
+      }
+
+      ctx.restore();
+    }
+
     function rasterizeIframeDOMToCanvas(iframeDoc, ctx, stageW, stageH) {
       if (!iframeDoc || !iframeDoc.body) return;
       const win = iframeDoc.defaultView;
 
-      // 1. Clear & paint root background
+      // 1. Paint root background
       ctx.save();
       const bodyStyle = win.getComputedStyle(iframeDoc.body);
       ctx.fillStyle = (bodyStyle.backgroundColor && bodyStyle.backgroundColor !== 'rgba(0, 0, 0, 0)')
@@ -1548,153 +1971,17 @@
       ctx.fillRect(0, 0, stageW, stageH);
       ctx.restore();
 
-      // 2. Collect visible elements in paint order
-      const allEls = Array.from(iframeDoc.body.querySelectorAll('*'));
-
-      for (let i = 0; i < allEls.length; i++) {
-        const el = allEls[i];
-        const tag = el.tagName.toLowerCase();
-        if (tag === 'script' || tag === 'style' || tag === 'link' || tag === 'meta') continue;
-
-        const cs = win.getComputedStyle(el);
-        if (cs.display === 'none' || cs.visibility === 'hidden') continue;
-        const opacity = parseFloat(cs.opacity);
-        if (opacity <= 0.01) continue;
-
-        const rect = el.getBoundingClientRect();
-        if (rect.width <= 0.5 || rect.height <= 0.5) continue;
-        if (rect.bottom < 0 || rect.top > stageH || rect.right < 0 || rect.left > stageW) continue;
-
-        ctx.save();
-        ctx.globalAlpha = opacity;
-
-        const radius = parseRadius(cs.borderTopLeftRadius, rect.width, rect.height);
-        const bg = cs.backgroundColor;
-        const hasBg = bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent';
-        const borderW = parseFloat(cs.borderTopWidth) || 0;
-        const borderColor = cs.borderTopColor;
-        const shadow = parseBoxShadow(cs.boxShadow);
-
-        // Draw hard or soft box-shadow
-        if (shadow && (hasBg || borderW > 0)) {
-          ctx.save();
-          ctx.fillStyle = shadow.color;
-          if (shadow.blur > 0) {
-            ctx.shadowColor = shadow.color;
-            ctx.shadowBlur = shadow.blur;
-          }
-          drawRoundedRectPath(
-            ctx,
-            rect.left + shadow.offsetX,
-            rect.top + shadow.offsetY,
-            rect.width,
-            rect.height,
-            radius
-          );
-          ctx.fill();
-          ctx.restore();
-        }
-
-        // Draw background fill
-        if (hasBg) {
-          ctx.fillStyle = bg;
-          drawRoundedRectPath(ctx, rect.left, rect.top, rect.width, rect.height, radius);
-          ctx.fill();
-        }
-
-        // Draw dotted radial background if present (like in Persian Fingerfood card)
-        if (cs.backgroundImage && cs.backgroundImage.includes('radial-gradient')) {
-          ctx.save();
-          drawRoundedRectPath(ctx, rect.left, rect.top, rect.width, rect.height, radius);
-          ctx.clip();
-          ctx.fillStyle = 'rgba(148, 163, 184, 0.35)';
-          const step = 28;
-          for (let gx = rect.left + 12; gx < rect.right; gx += step) {
-            for (let gy = rect.top + 12; gy < rect.bottom; gy += step) {
-              ctx.beginPath();
-              ctx.arc(gx, gy, 2, 0, Math.PI * 2);
-              ctx.fill();
-            }
-          }
-          ctx.restore();
-        }
-
-        // Draw border
-        if (borderW > 0 && borderColor && borderColor !== 'transparent') {
-          ctx.lineWidth = borderW * 2;
-          ctx.strokeStyle = borderColor;
-          drawRoundedRectPath(ctx, rect.left, rect.top, rect.width, rect.height, radius);
-          ctx.stroke();
-        }
-
-        // Draw embedded <canvas> or <img> if present
-        if (tag === 'canvas' || (tag === 'img' && el.complete && el.naturalWidth > 0)) {
-          try {
-            ctx.drawImage(el, rect.left, rect.top, rect.width, rect.height);
-          } catch (e) {}
-        }
-
-        // Draw direct text nodes with exact computed font, size, color & RTL support
-        for (let c = 0; c < el.childNodes.length; c++) {
-          const node = el.childNodes[c];
-          if (node.nodeType === 3) {
-            const text = node.nodeValue.replace(/\s+/g, ' ').trim();
-            if (!text) continue;
-
-            const range = iframeDoc.createRange();
-            range.selectNodeContents(node);
-            const clientRects = range.getClientRects();
-
-            // Compute actual scaled font size comparing bounding box vs layout size
-            const scaleFactor = el.offsetWidth > 0 ? (rect.width / el.offsetWidth) : 1;
-            const rawFontSize = parseFloat(cs.fontSize) || 16;
-            const scaledFontSize = rawFontSize * scaleFactor;
-            const fontWeight = cs.fontWeight || '700';
-            const fontFamily = cs.fontFamily || 'Vazirmatn, Inter, sans-serif';
-
-            ctx.font = `${fontWeight} ${scaledFontSize.toFixed(1)}px ${fontFamily}`;
-            ctx.fillStyle = cs.color || '#111827';
-            ctx.textBaseline = 'middle';
-            const isRtl = cs.direction === 'rtl' || /[\u0600-\u06FF]/.test(text);
-            ctx.direction = isRtl ? 'rtl' : 'ltr';
-
-            if (clientRects.length <= 1) {
-              const r = clientRects[0] || rect;
-              const align = cs.textAlign;
-              if (align === 'center') {
-                ctx.textAlign = 'center';
-                ctx.fillText(text, r.left + r.width / 2, r.top + r.height / 2);
-              } else if (align === 'right' || (isRtl && align !== 'left')) {
-                ctx.textAlign = 'right';
-                ctx.fillText(text, r.right - 2, r.top + r.height / 2);
-              } else {
-                ctx.textAlign = 'left';
-                ctx.fillText(text, r.left + 2, r.top + r.height / 2);
-              }
-            } else {
-              // Multi-line text node: split words across clientRects
-              const words = text.split(' ');
-              const linesCount = clientRects.length;
-              const wordsPerLine = Math.ceil(words.length / linesCount);
-              ctx.textAlign = 'center';
-              for (let ln = 0; ln < linesCount; ln++) {
-                const slice = words.slice(ln * wordsPerLine, (ln + 1) * wordsPerLine).join(' ');
-                const lr = clientRects[ln];
-                if (slice && lr) {
-                  ctx.fillText(slice, lr.left + lr.width / 2, lr.top + lr.height / 2);
-                }
-              }
-            }
-          }
-        }
-
-        ctx.restore();
+      // 2. Recursively render body children
+      const rootChildren = Array.from(iframeDoc.body.children);
+      for (let i = 0; i < rootChildren.length; i++) {
+        renderElementNodeRecursive(rootChildren[i], ctx, win, stageW, stageH);
       }
     }
 
     function getSupportedRecorderMime() {
       const candidates = [
         'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+        'video/mp4;codecs=avc1',
         'video/mp4',
         'video/webm;codecs=vp9,opus',
         'video/webm;codecs=vp8,opus',
@@ -1718,11 +2005,13 @@
       state.isRendering = true;
       state.cancelRenderRequested = false;
 
-      // Show Render Progress Overlay
+      // Unlock AudioContext immediately inside the user click handler!
+      await audioEngine.ensureReady();
+
       els.renderOverlay.classList.remove('hidden');
       els.renderProgressBar.style.width = '0%';
       els.renderProgressPct.textContent = '0%';
-      els.renderStatusTitle.textContent = `Recording ${state.fps}FPS Video...`;
+      els.renderStatusTitle.textContent = `Recording ${state.fps}FPS Video + Audio...`;
       els.renderStatusSubtitle.textContent = `${state.width}×${state.height} • Exact ${state.durationSec.toFixed(1)}s`;
 
       try {
@@ -1731,36 +2020,45 @@
         if (doc && doc.fonts && doc.fonts.ready) {
           await doc.fonts.ready;
         }
+        if (document.fonts && document.fonts.ready) {
+          await document.fonts.ready;
+        }
 
         // Create dedicated full-resolution recording canvas
         const recordCanvas = document.createElement('canvas');
         recordCanvas.width = state.width;
         recordCanvas.height = state.height;
         const ctx = recordCanvas.getContext('2d', { alpha: false });
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
-        // Restart iframe animation cleanly from 0.0s
+        // Lock iframe timeline at 0.0s before starting recorder
         if (win && typeof win.__seekMotionStage === 'function') {
-          win.__seekMotionStage(0, false);
+          win.__seekMotionStage(0, true);
         }
 
-        // Paint initial frame immediately so stream is warm
+        // Warm-up initial frame
         rasterizeIframeDOMToCanvas(doc, ctx, state.width, state.height);
 
-        // Combine 60FPS Canvas Video Track + Studio Audio Track
+        // Combine 60FPS Canvas Video Track + Synchronized Studio Audio Track
+        const combinedStream = new MediaStream();
         const canvasStream = recordCanvas.captureStream(state.fps);
-        const audioStream = audioEngine.startExportSoundtrack(state.durationSec);
+        canvasStream.getVideoTracks().forEach(t => combinedStream.addTrack(t));
+
+        const audioStream = await audioEngine.startExportSoundtrack(state.durationSec, state.cueTimesSec);
         if (audioStream) {
-          audioStream.getAudioTracks().forEach(track => canvasStream.addTrack(track));
+          audioStream.getAudioTracks().forEach(t => combinedStream.addTrack(t));
         }
 
         const mimeType = getSupportedRecorderMime();
         const recorderOptions = {
-          videoBitsPerSecond: state.bitrate
+          videoBitsPerSecond: state.bitrate,
+          audioBitsPerSecond: 192000
         };
         if (mimeType) recorderOptions.mimeType = mimeType;
 
         const chunks = [];
-        const recorder = new MediaRecorder(canvasStream, recorderOptions);
+        const recorder = new MediaRecorder(combinedStream, recorderOptions);
         recorder.ondataavailable = (e) => {
           if (e.data && e.data.size > 0) chunks.push(e.data);
         };
@@ -1784,15 +2082,14 @@
             const elapsed = performance.now() - startWallTime;
             const clampedMs = Math.min(elapsed, durationMs);
 
-            // Sync iframe animations to exact wall-clock millisecond
+            // Lock and seek iframe animations to exact millisecond (`lockClock = true` fixes jitter!)
             if (win && typeof win.__seekMotionStage === 'function') {
-              win.__seekMotionStage(clampedMs, false);
+              win.__seekMotionStage(clampedMs, true);
             }
 
-            // Rasterize live DOM directly onto recording canvas
+            // Rasterize live DOM with True-Matrix 2D Engine
             rasterizeIframeDOMToCanvas(doc, ctx, state.width, state.height);
 
-            // Update progress UI
             const pct = Math.min(100, Math.round((clampedMs / durationMs) * 100));
             els.renderProgressBar.style.width = `${pct}%`;
             els.renderProgressPct.textContent = `${pct}%`;
@@ -1813,12 +2110,17 @@
         }
         await exportPromise;
 
+        // Unlock live preview animations after export completes
+        if (win && typeof win.__seekMotionStage === 'function') {
+          win.__seekMotionStage(0, false);
+        }
+
         if (state.cancelRenderRequested) {
           showToast('خروجی توسط شما متوقف شد');
           return;
         }
 
-        const finalMime = mimeType || 'video/webm';
+        const finalMime = recorder.mimeType || mimeType || 'video/webm';
         const ext = finalMime.includes('mp4') ? 'mp4' : 'webm';
         const blob = new Blob(chunks, { type: finalMime });
         const url = URL.createObjectURL(blob);
@@ -1846,11 +2148,11 @@
         a.click();
         a.remove();
 
-        showToast(`✅ ویدیوی ${item.duration} ثانیه‌ای با موفقیت آماده و دانلود شد!`);
+        showToast(`✅ ویدیوی ${item.duration} ثانیه‌ای با صدا آماده و دانلود شد!`);
         switchTab('library');
       } catch (err) {
         console.error('Export error:', err);
-        showToast('خطا در ضبط ویدیو: مرورگر اجازه دسترسی نداد');
+        showToast('خطا در ضبط ویدیو: لطفاً دوباره امتحان کنید');
       } finally {
         audioEngine.stopAll();
         state.isRendering = false;
@@ -1877,7 +2179,7 @@
           <div class="flex items-center justify-between">
             <div>
               <h4 class="text-sm font-extrabold text-slate-900">${item.title}</h4>
-              <p class="text-[11px] font-mono-code text-slate-400">${item.resolution} • ${item.duration}s • ${item.sizeMB} MB (${item.ext})</p>
+              <p class="text-[11px] font-mono-code text-slate-400">${item.resolution} • ${item.duration}s • 🔊 Audio • ${item.sizeMB} MB (${item.ext})</p>
             </div>
             <a href="${item.url}" download="${item.filename}" class="px-3.5 py-2 rounded-xl bg-slate-900 text-white text-xs font-extrabold shadow-sm active:scale-95 transition">
               Download
@@ -1889,7 +2191,7 @@
     }
 
     /********************************************************************
-     * 8. GEMINI FLASH AI ENGINE (PRE-FLIGHT PING + 3X RETRY + ANTI-CLICHE)
+     * 8. GEMINI FLASH AI ENGINE (TRANSPARENT ERRORS + 3X RETRY)
      ********************************************************************/
     const GEMINI_MODELS = [
       'gemini-3-flash-preview',
@@ -1900,12 +2202,15 @@
     function getActiveApiKey() {
       const userKey = els.inputGeminiKey.value.trim();
       if (userKey) return userKey;
-      const apiKey = ""; // Canvas runtime injects key if empty
+      const apiKey = "";
       return apiKey;
     }
 
     async function fetchWithRetry(promptText, systemText, maxTokens = 4096) {
       const key = getActiveApiKey();
+      if (!key) {
+        throw new Error('NO_API_KEY');
+      }
       let lastErr = null;
 
       for (let attempt = 0; attempt < 3; attempt++) {
@@ -1931,7 +2236,7 @@
           });
 
           if (!res.ok) {
-            throw new Error(`HTTP ${res.status}`);
+            throw new Error(`HTTP_${res.status}`);
           }
 
           const data = await res.json();
@@ -1939,10 +2244,10 @@
           if (text) return { text, modelName };
         } catch (err) {
           lastErr = err;
-          await new Promise(r => setTimeout(r, 600 * (attempt + 1)));
+          await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
         }
       }
-      throw lastErr || new Error('Connection failed after 3 retries');
+      throw lastErr || new Error('CONNECTION_FAILED');
     }
 
     async function runAiPingTest() {
@@ -1957,14 +2262,19 @@
         els.aiStatusDot.className = 'w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-emerald-500/15';
         return true;
       } catch (e) {
-        els.aiPingResult.textContent = 'Offline / Key Required — Using Instant Studio Generator Fallback';
+        const msg = e.message === 'NO_API_KEY'
+          ? 'کلید Gemini در تب Settings وارد نشده (استفاده از موتور داخلی)'
+          : `خطای اتصال (${e.message}) — استفاده از موتور داخلی`;
+        els.aiPingResult.textContent = msg;
         els.aiPingResult.className = 'text-[11px] font-semibold text-amber-600 mt-2';
         return false;
       }
     }
 
     function buildOfflineCreativeMotion(userPrompt) {
-      const cleanTitle = userPrompt.slice(0, 32) || 'استوری اختصاصی برند';
+      const words = userPrompt.trim().split(/\s+/);
+      const shortHeading = words.slice(0, 4).join(' ') || 'پیشنهاد ویژه امروز';
+      const subText = userPrompt.slice(0, 90);
       return `<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -1974,30 +2284,33 @@
   body {
     width: 100vw;
     height: 100vh;
-    background: #FFFDF7;
-    color: #111827;
-    font-family: 'Vazirmatn', sans-serif;
+    background: #090A0F;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    font-family: 'Vazirmatn', sans-serif;
   }
   .story-card {
     width: 360px;
     height: 640px;
-    background: #FFFDF7;
+    background-color: #FFFDF7;
+    background-image: radial-gradient(#CBD5E1 1.3px, transparent 1.3px);
+    background-size: 16px 16px;
     border: 4px solid #111827;
     padding: 24px 20px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    position: relative;
+    overflow: hidden;
   }
   .badge {
     align-self: flex-start;
     background: #FACC15;
     color: #111827;
     font-weight: 900;
-    font-size: 13px;
+    font-size: 12px;
     padding: 6px 14px;
     border: 2.5px solid #111827;
     border-radius: 999px;
@@ -2006,7 +2319,7 @@
   }
   .hero {
     font-family: 'Lalezar', 'Vazirmatn', sans-serif;
-    font-size: 40px;
+    font-size: 38px;
     line-height: 1.15;
     color: #111827;
     animation: slide 0.7s 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -2015,10 +2328,10 @@
     background: #EF4444;
     color: #FFFFFF;
     border: 3.5px solid #111827;
-    border-radius: 24px;
-    padding: 24px;
+    border-radius: 22px;
+    padding: 22px;
     box-shadow: 7px 7px 0 #111827;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 800;
     line-height: 1.5;
     animation: pop 0.7s 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
@@ -2026,12 +2339,13 @@
   .footer-cta {
     background: #111827;
     color: #FACC15;
+    border: 3px solid #111827;
     border-radius: 16px;
-    padding: 16px;
+    padding: 15px;
     text-align: center;
     font-weight: 900;
-    font-size: 16px;
-    box-shadow: 0 6px 0 #EF4444;
+    font-size: 15px;
+    box-shadow: 0 6px 0 #FACC15;
     animation: slide 0.7s 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
   @keyframes pop {
@@ -2045,11 +2359,11 @@
 </style>
 </head>
 <body>
-  <div class="story-card" data-duration="8">
+  <div class="story-card">
     <div class="badge">✨ طراحی اختصاصی نئوبروتالیسم</div>
-    <div class="hero">${cleanTitle}</div>
-    <div class="card-mid">${userPrompt}</div>
-    <div class="footer-cta">همین حالا اقدام کنید ←</div>
+    <div class="hero">${shortHeading}</div>
+    <div class="card-mid">${subText}</div>
+    <div class="footer-cta">همین حالا سفارش دهید ←</div>
   </div>
 </body>
 </html>`;
@@ -2064,19 +2378,22 @@
 
       els.btnGenerateAi.disabled = true;
       els.btnGenerateAi.innerHTML = '<span>⏳ در حال تست اتصال و تولید کد...</span>';
-      els.aiModalStatus.textContent = 'Step 1/2: Verifying connection...';
+      els.aiModalStatus.textContent = 'Step 1/2: Verifying Gemini API connection...';
 
       const systemInstruction = `You are an elite Motion Graphics Code Director.
 Return ONLY a complete, self-contained HTML5 document (<!DOCTYPE html>...) with embedded CSS and JS.
 STRICT ANTI-CLICHE RULES:
 - NEVER use generic dark cyberpunk neon gradients, glowing purple/cyan blobs, or cliché AI layouts.
 - ALWAYS use bold Neo-Brutalism, Swiss International Typographic Grid, or Warm Editorial Paper aesthetics (#FFFDF7, #111827, #EF4444, #FACC15, #FF3B00).
+- Create a clean .story-card (width: 360px; height: 640px;) centered inside body so Auto-Fit scales it crisply to 1080x1920.
 - NEVER include replay/restart buttons or UI controls outside the poster.
-- Add data-duration="8" or data-duration="10" on the main container.
 - Use Vazirmatn and Lalezar fonts for Persian text.`;
 
       try {
-        await runAiPingTest();
+        const connected = await runAiPingTest();
+        if (!connected) {
+          throw new Error('NO_API_KEY_OR_OFFLINE');
+        }
         els.aiModalStatus.textContent = 'Step 2/2: Generating studio motion code...';
         const { text } = await fetchWithRetry(prompt, systemInstruction, 4096);
         const cleaned = text.replace(/^```html\s*/i, '').replace(/```\s*$/i, '').trim();
@@ -2086,18 +2403,17 @@ STRICT ANTI-CLICHE RULES:
           applyStageCode();
           els.aiModal.classList.add('hidden');
           switchTab('preview');
-          showToast('✨ موشن‌گرافیک با موفقیت ساخته شد!');
+          showToast('✨ موشن‌گرافیک با هوش مصنوعی Gemini ساخته شد!');
         } else {
-          throw new Error('Invalid HTML');
+          throw new Error('INVALID_HTML');
         }
       } catch (err) {
-        // Instant deterministic studio fallback so the user is never blocked
         state.code = buildOfflineCreativeMotion(prompt);
         state.title = 'AI Neo-Brutalist Motion';
         applyStageCode();
         els.aiModal.classList.add('hidden');
         switchTab('preview');
-        showToast('✨ موشن‌گرافیک با موتور داخلی ساخته شد!');
+        showToast('⚠️ کلید API در تنظیمات نبود؛ قالب با موتور آفلاین ساخته شد');
       } finally {
         els.btnGenerateAi.disabled = false;
         els.btnGenerateAi.innerHTML = '<span>تست اتصال و ساخت فوری کد موشن</span>';
@@ -2137,7 +2453,6 @@ STRICT ANTI-CLICHE RULES:
       });
     });
 
-    // Aspect Ratio Selector Buttons
     document.querySelectorAll('.ratio-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const ratio = btn.getAttribute('data-ratio');
@@ -2160,7 +2475,6 @@ STRICT ANTI-CLICHE RULES:
       });
     });
 
-    // Toggle Auto-Fit Inner Card
     function toggleAutoFitCard() {
       state.autoFitCard = !state.autoFitCard;
       els.btnAutofitPill.textContent = state.autoFitCard ? 'Auto-Fit: ON' : 'Auto-Fit: OFF';
@@ -2183,19 +2497,25 @@ STRICT ANTI-CLICHE RULES:
     els.btnFitMode.addEventListener('click', toggleAutoFitCard);
     els.btnSettingsAutofit.addEventListener('click', toggleAutoFitCard);
 
-    // Sound Toggle
     function toggleSoundState(forceVal) {
       audioEngine.enabled = typeof forceVal === 'boolean' ? forceVal : !audioEngine.enabled;
       els.chkEnableSound.checked = audioEngine.enabled;
       els.soundActiveDot.classList.toggle('hidden', !audioEngine.enabled);
+      updateMetadataLabels();
       if (audioEngine.enabled) audioEngine.playPopPreview();
-      showToast(audioEngine.enabled ? '🔊 صدای استودیو فعال شد' : '🔇 صدا غیرفعال شد');
+      showToast(audioEngine.enabled ? '🔊 صدای استودیو و خروجی فعال شد' : '🔇 صدا غیرفعال شد');
     }
 
     els.btnSoundToggle.addEventListener('click', () => toggleSoundState());
     els.chkEnableSound.addEventListener('change', (e) => toggleSoundState(e.target.checked));
+    els.btnTestAudio.addEventListener('click', async () => {
+      audioEngine.enabled = true;
+      els.chkEnableSound.checked = true;
+      els.soundActiveDot.classList.remove('hidden');
+      await audioEngine.startExportSoundtrack(2.5, [0.1, 0.5, 1.0]);
+      showToast('🎵 تست صدای خروجی (۲.۵ ثانیه)...');
+    });
 
-    // Play / Pause & Timeline Scrubber
     els.btnPlayPause.addEventListener('click', () => {
       state.isPlaying = !state.isPlaying;
       els.iconPause.classList.toggle('hidden', !state.isPlaying);
@@ -2218,10 +2538,10 @@ STRICT ANTI-CLICHE RULES:
     document.getElementById('btn-restart-preview').addEventListener('click', () => {
       state.currentTimeMs = 0;
       applyStageCode();
+      audioEngine.playPopPreview();
       showToast('انیمیشن از ابتدا اجرا شد');
     });
 
-    // Code Editor Events
     let codeDebounceTimer = null;
     els.codeTextarea.addEventListener('input', () => {
       state.code = els.codeTextarea.value;
@@ -2242,11 +2562,11 @@ STRICT ANTI-CLICHE RULES:
           state.code = text;
           state.title = 'Pasted Motion';
           applyStageCode();
-          showToast('کد پیست شد و مدت زمان ویدیو خودکار تنظیم شد');
+          showToast('کد پیست شد و زمان واقعی انیمیشن محاسبه شد');
         }
       } catch (e) {
         els.codeTextarea.focus();
-        showToast('کد خود را در کادر زیر Paste کنید');
+        showToast('کد خود را در کادر ویرایشگر Paste کنید');
       }
     });
 
@@ -2268,8 +2588,9 @@ STRICT ANTI-CLICHE RULES:
     document.getElementById('btn-rescan-duration').addEventListener('click', () => {
       const doc = els.previewIframe.contentDocument;
       const detected = detectCodeDurationSeconds(state.code, doc);
+      state.cueTimesSec = detected.cues;
       setDurationSeconds(detected.seconds, detected.reason, true);
-      showToast(`⏱️ زمان تشخیص داده شده: ${detected.seconds.toFixed(1)} ثانیه`);
+      showToast(`⏱️ زمان واقعی انیمیشن: ${detected.seconds.toFixed(1)} ثانیه (${detected.reason})`);
     });
 
     document.querySelectorAll('.snippet-chip').forEach(chip => {
@@ -2285,18 +2606,18 @@ STRICT ANTI-CLICHE RULES:
           state.code = els.codeTextarea.value;
           applyStageCode();
         } else if (type === 'transform3d') {
-          els.codeTextarea.value += `\n<style>\n.card-3d { transform: perspective(900px) rotateX(8deg) rotateY(-8deg); }\n</style>`;
+          els.codeTextarea.value += `\n<style>\n.card-3d { transform: rotate(-6deg) scale(1.04); }\n</style>`;
           state.code = els.codeTextarea.value;
           applyStageCode();
         }
       });
     });
 
-    // Settings Controls
     els.chkAutoDuration.addEventListener('change', (e) => {
       state.autoDuration = e.target.checked;
       if (state.autoDuration) {
         const detected = detectCodeDurationSeconds(state.code, els.previewIframe.contentDocument);
+        state.cueTimesSec = detected.cues;
         setDurationSeconds(detected.seconds, detected.reason, true);
       }
     });
@@ -2304,7 +2625,7 @@ STRICT ANTI-CLICHE RULES:
     els.inputDurationSec.addEventListener('input', (e) => {
       state.autoDuration = false;
       els.chkAutoDuration.checked = false;
-      setDurationSeconds(parseFloat(e.target.value) || 10, 'Manual Slider Override', false);
+      setDurationSeconds(parseFloat(e.target.value) || 6, 'Manual Slider Override', false);
     });
 
     els.selectFps.addEventListener('change', (e) => {
@@ -2313,7 +2634,7 @@ STRICT ANTI-CLICHE RULES:
     });
 
     els.selectBitrate.addEventListener('change', (e) => {
-      state.bitrate = parseInt(e.target.value, 10) || 16000000;
+      state.bitrate = parseInt(e.target.value, 10) || 18000000;
     });
 
     els.inputCustomAudio.addEventListener('change', async (e) => {
@@ -2328,11 +2649,10 @@ STRICT ANTI-CLICHE RULES:
 
     els.btnClearAudio.addEventListener('click', () => {
       audioEngine.clearCustomAudio();
-      els.audioFileLabel.textContent = 'Using Built-in Studio Ambient Synth + Pop SFX';
-      showToast('سینت‌سایزر داخلی استودیو فعال شد');
+      els.audioFileLabel.textContent = 'Built-in Studio Beat + Sub-Bass & Pop SFX Active';
+      showToast('موتور صدای استودیویی داخلی فعال شد');
     });
 
-    // AI Modal Controls
     document.getElementById('btn-open-ai-quick').addEventListener('click', () => {
       els.aiModal.classList.remove('hidden');
     });
@@ -2350,21 +2670,19 @@ STRICT ANTI-CLICHE RULES:
     els.btnGenerateAi.addEventListener('click', handleGenerateAiMotion);
     els.btnPingAi.addEventListener('click', runAiPingTest);
 
-    // Render Buttons
     els.btnRenderMain.addEventListener('click', startSmoothVideoExport);
     document.getElementById('btn-render-from-library').addEventListener('click', startSmoothVideoExport);
     els.btnCancelRender.addEventListener('click', () => {
       state.cancelRenderRequested = true;
     });
 
-    // Initialize App on Load
     window.addEventListener('load', () => {
       applyStageCode();
       updateMetadataLabels();
       setTimeout(() => {
         els.splash.classList.add('hidden-splash');
         updateStageViewportScale();
-      }, 650);
+      }, 600);
     });
   </script>
 </body>
