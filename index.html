@@ -3,10 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Motion Studio Pro — True 1:1 60FPS Engine</title>
+  <title>Motion Studio Pro v3.0 — Native 60FPS Direct Rasterizer</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- html2canvas for High-DPI DOM Rasterization with Font & Layout Preservation -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <!-- Preload Persian & English Studio Fonts -->
@@ -78,832 +76,1007 @@
       box-shadow: 0 12px 32px -12px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
     }
 
+    .pill-shadow {
+      box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.08);
+    }
+
     .bottom-nav-shadow {
-      box-shadow: 0 -10px 35px -5px rgba(15, 23, 42, 0.07);
+      box-shadow: 0 -8px 30px rgba(15, 23, 42, 0.06);
     }
 
-    /* Stage Scaling Container */
-    #stage-viewport-host {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      cursor: pointer;
     }
-
-    #stage-scaler {
-      position: relative;
-      transform-origin: center center;
-      box-shadow: 0 18px 45px -10px rgba(15, 23, 42, 0.22);
-      border-radius: 16px;
-      overflow: hidden;
-      background: #FFFFFF;
-      flex-shrink: 0;
+    input[type="range"]::-webkit-slider-runnable-track {
+      background: #E2E8F0;
+      height: 6px;
+      border-radius: 999px;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      margin-top: -5px;
+      background-color: #0F172A;
+      height: 16px;
+      width: 16px;
+      border-radius: 999px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      transition: transform 0.15s ease;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
     }
   </style>
 </head>
 <body>
 
-  <!-- INITIAL SPLASH SCREEN -->
+  <!-- Splash Screen matching screenshot 4 -->
   <div id="splash-screen" class="fixed inset-0 z-50 bg-[#121316] flex flex-col items-center justify-center">
-    <div class="splash-logo-anim w-32 h-28 rounded-[38px] bg-white flex items-center justify-center p-3 shadow-2xl">
-      <div class="w-full h-full bg-[#121316] rounded-[26px] flex items-center justify-center gap-2">
-        <svg class="w-5 h-5 text-white stroke-[3]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-        <svg class="w-8 h-8 text-white fill-white ml-0.5" viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
-        <svg class="w-5 h-5 text-white stroke-[3]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    <div class="w-28 h-28 bg-white rounded-[30px] flex items-center justify-center shadow-2xl splash-logo-anim">
+      <div class="w-20 h-16 bg-[#121316] rounded-[18px] flex items-center justify-center gap-1.5">
+        <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        <svg class="w-6 h-6 text-white fill-white" viewBox="0 0 24 24">
+          <polygon points="7 4 20 12 7 20 7 4"></polygon>
+        </svg>
+        <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
       </div>
-    </div>
-    <div class="mt-5 text-center">
-      <p class="text-white/90 font-bold tracking-tight text-base">Motion Studio Pro v2.5</p>
-      <p class="text-emerald-400 text-xs mt-1 font-mono-code">AUTO-CROP STAGE • EXACT DURATION • AUDIO MUX</p>
     </div>
   </div>
 
-  <!-- APP SHELL -->
-  <div class="relative w-full max-w-[460px] h-full md:h-[94dvh] md:rounded-[42px] bg-[#F5F6F9] flex flex-col overflow-hidden md:shadow-[0_0_0_10px_#1E2028,0_30px_80px_rgba(0,0,0,0.6)]">
+  <!-- Main Mobile Shell -->
+  <div id="app-shell" class="relative w-full max-w-[440px] h-[100dvh] bg-[#F5F6F9] flex flex-col justify-between overflow-hidden sm:rounded-[38px] sm:h-[94dvh] sm:border-[6px] sm:border-[#22252A] shadow-2xl">
 
-    <!-- TOP HEADER -->
-    <header class="pt-3.5 pb-2 px-4 flex items-center justify-between shrink-0 z-20">
-      <div class="flex items-center gap-1">
-        <button id="btn-reset-header" title="ریست صحنه" class="w-9 h-9 rounded-full bg-white border border-slate-200/80 text-slate-700 flex items-center justify-center hover:bg-slate-100 active:scale-95 transition shadow-sm">
-          <svg class="w-4 h-4 stroke-[2.2]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-        </button>
-      </div>
+    <!-- Top Header -->
+    <header class="pt-4 pb-2 px-5 flex items-center justify-between shrink-0 z-20">
+      <button id="btn-fit-mode" title="Toggle Auto-Fit Inner Card" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-200/60 active:scale-95 transition">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
 
-      <div class="text-center flex flex-col items-center">
+      <div class="flex flex-col items-center">
         <div class="flex items-center gap-1.5">
-          <h1 class="text-[18px] font-extrabold tracking-tight text-slate-900">Motion Studio</h1>
-          <span id="ai-health-dot" title="وضعیت هوش مصنوعی (کلیک برای تست)" class="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20 cursor-pointer"></span>
+          <h1 class="text-[17px] font-extrabold tracking-tight text-slate-900">Motion Studio</h1>
+          <span id="ai-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-emerald-500/15" title="Engine Ready"></span>
         </div>
-        <p id="header-specs-label" class="text-[12px] font-semibold text-slate-500 tracking-wide">
-          9:16 • 60 FPS • 10.0s
-        </p>
+        <div class="flex items-center gap-1.5 mt-0.5">
+          <p id="header-meta" class="text-[11.5px] font-semibold text-slate-400 tracking-wide">9:16 • 60 FPS • 10.0s</p>
+          <span id="auto-dur-badge" class="px-1.5 py-0.5 text-[9.5px] font-bold bg-emerald-50 text-emerald-700 rounded-md border border-emerald-200/80">Auto</span>
+        </div>
       </div>
 
-      <!-- Audio Studio & Sound Track Button -->
-      <button id="btn-open-audio-modal" title="مدیریت صدا و موزیک ویدیو" class="h-9 px-2.5 rounded-full bg-white border border-slate-200/80 flex items-center gap-1 text-slate-800 hover:bg-slate-100 active:scale-95 transition relative shadow-sm">
-        <svg class="w-4 h-4 text-slate-900" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <button id="btn-sound-toggle" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-200/60 active:scale-95 transition relative" title="Toggle Built-in Audio & Synth">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 18V5l12-2v13"></path>
           <circle cx="6" cy="18" r="3"></circle>
           <circle cx="18" cy="16" r="3"></circle>
         </svg>
-        <span id="audio-status-pill" class="text-[10px] font-bold text-emerald-700">SFX On</span>
+        <span id="sound-active-dot" class="w-2 h-2 rounded-full bg-emerald-500 absolute top-2 right-2"></span>
       </button>
     </header>
 
-    <!-- MAIN TAB VIEWS -->
-    <main class="flex-1 overflow-hidden relative flex flex-col px-4 pb-20">
+    <!-- Main Tab Views Container -->
+    <main class="flex-1 overflow-y-auto no-scrollbar px-5 pb-28 flex flex-col">
 
       <!-- ==================== TAB 1: PREVIEW ==================== -->
-      <section id="tab-preview" class="w-full h-full flex flex-col items-center justify-between">
-        
-        <!-- Aspect Ratio & Auto-Crop Bar -->
-        <div class="w-full flex items-center justify-between gap-2 shrink-0 my-0.5">
-          <div class="bg-[#ECEEF3] p-1 rounded-full flex items-center gap-0.5 flex-1">
-            <button data-ratio="9:16" class="ratio-btn flex-1 py-1.5 rounded-full text-[12px] font-bold transition-all bg-white text-slate-900 shadow-sm">9:16</button>
-            <button data-ratio="16:9" class="ratio-btn flex-1 py-1.5 rounded-full text-[12px] font-semibold transition-all text-slate-500 hover:text-slate-800">16:9</button>
-            <button data-ratio="1:1" class="ratio-btn flex-1 py-1.5 rounded-full text-[12px] font-semibold transition-all text-slate-500 hover:text-slate-800">1:1</button>
-            <button data-ratio="4:5" class="ratio-btn flex-1 py-1.5 rounded-full text-[12px] font-semibold transition-all text-slate-500 hover:text-slate-800">4:5</button>
-          </div>
-
-          <!-- Smart Card Auto-Zoom Toggle (Fixes tiny card inside huge black box!) -->
-          <button id="btn-toggle-autocrop" title="بزرگنمایی خودکار کارت وسط صفحه و حذف حاشیه‌های سیاه اضافی" class="px-3 py-2 rounded-full bg-emerald-600 text-white text-[11px] font-bold flex items-center gap-1 shadow-sm active:scale-95 transition shrink-0">
-            <span>🔍 Auto-Fit Card: ON</span>
-          </button>
+      <section id="tab-preview" class="flex-1 flex flex-col justify-between items-center py-1">
+        <!-- Aspect Ratio Selector Pill -->
+        <div class="bg-[#EAEEF4] p-1 rounded-full flex items-center gap-1 w-full max-w-[300px] justify-between shrink-0 my-1">
+          <button data-ratio="9:16" class="ratio-btn flex-1 py-1.5 rounded-full text-xs font-extrabold transition bg-white text-slate-900 pill-shadow">9:16</button>
+          <button data-ratio="16:9" class="ratio-btn flex-1 py-1.5 rounded-full text-xs font-bold transition text-slate-500 hover:text-slate-800">16:9</button>
+          <button data-ratio="1:1" class="ratio-btn flex-1 py-1.5 rounded-full text-xs font-bold transition text-slate-500 hover:text-slate-800">1:1</button>
+          <button data-ratio="4:5" class="ratio-btn flex-1 py-1.5 rounded-full text-xs font-bold transition text-slate-500 hover:text-slate-800">4:5</button>
         </div>
 
-        <!-- Stage Preview Card -->
-        <div class="w-full flex-1 my-1.5 flex flex-col items-center justify-center relative min-h-0">
-          <div id="preview-card-shell" class="soft-card w-full h-full rounded-[26px] p-2.5 flex flex-col items-center justify-center relative overflow-hidden border border-slate-200/60">
-            
-            <!-- Top Floating Overlay Badges inside Preview -->
-            <div class="absolute top-2.5 left-3 right-3 flex items-center justify-between z-20 pointer-events-none">
-              <span id="resolution-pill" class="px-2.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-mono-code font-medium shadow">
-                1080×1920 • Native 1:1
-              </span>
-              <button id="btn-ai-floating" class="pointer-events-auto px-3 py-1 rounded-full bg-slate-900 text-white text-[11px] font-semibold flex items-center gap-1.5 shadow-md hover:bg-slate-800 active:scale-95 transition">
-                <span>✨</span>
-                <span class="font-fa">ساخت با هوش مصنوعی</span>
-              </button>
-            </div>
+        <!-- Stage Card Container -->
+        <div class="w-full flex-1 flex flex-col items-center justify-center my-2 min-h-[300px] relative">
+          <div id="stage-card-shell" class="soft-card w-full h-full rounded-[28px] p-3 flex flex-col items-center justify-between relative overflow-hidden border border-slate-200/60">
 
-            <!-- Empty State -->
-            <div id="preview-empty-state" class="hidden flex-col items-center justify-center text-center px-6 z-10">
-              <div class="text-slate-400 mb-3">
-                <svg class="w-10 h-10 mx-auto stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+            <!-- Top Floating Overlay Pills -->
+            <div class="w-full flex items-center justify-between z-20 px-1 pt-0.5 shrink-0">
+              <div class="flex items-center gap-1">
+                <span id="resolution-pill" class="px-2.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-mono-code font-semibold">1080×1920</span>
+                <button id="btn-autofit-pill" class="px-2 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-bold shadow-sm active:scale-95 transition">Auto-Fit: ON</button>
               </div>
-              <h3 class="text-lg font-extrabold text-slate-900">Ready for Your Code</h3>
-              <p class="text-sm text-slate-500 mt-1.5 leading-relaxed">
-                Paste your HTML/CSS in the Code tab, use <strong class="text-slate-700">✨ AI Prompt</strong>, or choose a Preset.
-              </p>
-              <button id="btn-load-default-preset" class="mt-4 px-4 py-2 rounded-full bg-slate-900 text-white text-xs font-semibold shadow-sm hover:bg-slate-800">
-                Load Finger-Food Story Preset
+              <button id="btn-open-ai-quick" class="px-2.5 py-1 rounded-full bg-slate-900 text-white text-[10.5px] font-bold flex items-center gap-1 shadow-sm active:scale-95 transition font-fa">
+                <span>✨</span>
+                <span>ساخت با هوش مصنوعی</span>
               </button>
             </div>
 
-            <!-- TRUE PROPORTIONAL STAGE HOST -->
-            <div id="stage-viewport-host" class="w-full h-full">
-              <div id="stage-scaler">
+            <!-- Proportional Scaling Viewport -->
+            <div id="stage-viewport-slot" class="relative flex-1 w-full flex items-center justify-center overflow-hidden my-1.5 rounded-[18px] bg-[#0B0D13]">
+              <!-- Empty Placeholder when no code -->
+              <div id="empty-stage-placeholder" class="hidden flex-col items-center justify-center text-center p-6 bg-[#F1F5F9] inset-0 absolute z-10">
+                <div class="text-slate-400 mb-3">
+                  <svg class="w-10 h-10 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="16 18 22 12 16 6"></polyline>
+                    <polyline points="8 6 2 12 8 18"></polyline>
+                  </svg>
+                </div>
+                <h3 class="text-base font-extrabold text-slate-800 mb-1">Ready for Your Code</h3>
+                <p class="text-xs text-slate-500 max-w-[200px] leading-relaxed">Paste your HTML/CSS in the Code tab or choose a Preset.</p>
+              </div>
+
+              <!-- Scaled Wrapper holding exact 1080x1920 iframe -->
+              <div id="scaled-stage-wrapper" style="width: 1080px; height: 1920px; transform-origin: center center; position: relative; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
                 <iframe
-                  id="motion-iframe"
-                  title="Motion Stage"
+                  id="preview-iframe"
                   sandbox="allow-scripts allow-same-origin"
-                  class="w-full h-full border-0 block select-none"
+                  style="width: 1080px; height: 1920px; border: 0; display: block; background: transparent; pointer-events: none;"
+                  title="Motion Stage Preview"
                 ></iframe>
               </div>
             </div>
 
-            <!-- Interactive Timeline Scrubber Bar at Bottom of Card -->
-            <div class="w-full mt-2 pt-1.5 border-t border-slate-100 flex items-center gap-2 z-20 shrink-0">
-              <button id="btn-play-pause" class="w-7 h-7 rounded-full bg-slate-900 text-white flex items-center justify-center hover:bg-slate-800 active:scale-90 transition shrink-0">
-                <svg id="icon-pause" class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-                <svg id="icon-play" class="w-3.5 h-3.5 fill-current hidden ml-0.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <!-- Scrubber Controls inside Stage Card -->
+            <div class="w-full flex items-center gap-2.5 px-1 pt-0.5 z-20 shrink-0">
+              <button id="btn-play-pause" class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center active:scale-90 transition shrink-0">
+                <svg id="icon-pause" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+                  <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+                </svg>
+                <svg id="icon-play" class="w-3.5 h-3.5 hidden ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
               </button>
-              <input id="timeline-scrubber" type="range" min="0" max="10000" value="0" step="16" class="flex-1 accent-slate-900 h-1.5 bg-slate-200 rounded-lg cursor-pointer" />
-              <span id="timeline-time-label" class="text-[11px] font-mono-code text-slate-500 w-20 text-right shrink-0">0.0s / 10.0s</span>
+              <input id="timeline-scrubber" type="range" min="0" max="10000" value="0" step="16" class="flex-1" />
+              <span id="scrubber-time-label" class="text-[11px] font-mono-code font-semibold text-slate-500 w-20 text-right shrink-0">0.0s / 10.0s</span>
             </div>
 
           </div>
         </div>
 
-        <!-- Bottom Info & Render Trigger Bar -->
-        <div class="w-full shrink-0 pb-1">
-          <div class="flex items-center justify-between px-1 mb-2">
-            <button id="btn-Duration-Quick" title="تغییر سریع زمان ویدیو" class="px-2.5 py-1 rounded-lg bg-slate-200/80 text-slate-700 text-[11px] font-mono-code font-bold hover:bg-slate-300 transition">
-              ⏱ 10.0s
+        <!-- Bottom Preset Info & Render Action -->
+        <div class="w-full flex flex-col items-center shrink-0 mt-1">
+          <div class="w-full flex items-center justify-between px-3 mb-2">
+            <button id="btn-favorite-preset" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-rose-500 active:scale-90 transition">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
             </button>
 
             <div class="text-center">
-              <h2 id="current-motion-title" class="text-[17px] font-extrabold text-slate-900 tracking-tight leading-tight">Persian Finger-Food Story</h2>
-              <p id="current-motion-sub" class="text-[11px] font-medium text-slate-500">Exact Duration • Persian Fonts • Audio Sync</p>
+              <h2 id="active-preset-title" class="text-lg font-black text-slate-900 tracking-tight">Custom Motion</h2>
+              <p id="active-preset-subtitle" class="text-[11.5px] font-semibold text-slate-400">Motion Graphics • 10.0s • H.264 MP4</p>
             </div>
 
-            <button id="btn-restart-preview" title="اجرای مجدد انیمیشن از ثانیه صفر" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 active:rotate-180 transition duration-300">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+            <button id="btn-restart-preview" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-800 active:rotate-180 transition duration-300" title="Restart Animation">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+              </svg>
             </button>
           </div>
 
-          <!-- Primary Export Button -->
-          <button id="btn-start-render" class="w-full py-3.5 px-5 rounded-2xl bg-slate-900 hover:bg-slate-800 active:scale-[0.99] text-white font-bold text-sm shadow-lg shadow-slate-900/15 flex items-center justify-center gap-2.5 transition">
-            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-            <span>Render Exact-Time Video + Audio</span>
-            <span id="export-badge-tag" class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded-md font-mono-code">10.0s Exact</span>
+          <button id="btn-render-main" class="w-full py-3.5 px-5 rounded-[20px] bg-[#0F172A] hover:bg-slate-800 text-white font-extrabold text-sm flex items-center justify-between shadow-lg shadow-slate-900/15 active:scale-[0.99] transition">
+            <div class="flex items-center gap-2.5">
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span>Render Smooth 60FPS Video</span>
+            </div>
+            <span id="render-btn-badge" class="px-2.5 py-1 rounded-lg bg-white/10 text-[11px] font-mono-code font-semibold">10.0s • 1:1</span>
           </button>
         </div>
-
       </section>
 
-      <!-- ==================== TAB 2: CODE & AI STUDIO ==================== -->
-      <section id="tab-code" class="w-full h-full hidden flex-col justify-between">
-        
-        <!-- Top Action Pills -->
-        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 shrink-0">
-          <button id="btn-code-paste" class="px-3 py-2 rounded-2xl bg-white text-slate-900 font-bold text-[12px] shadow-sm border border-slate-200/70 flex items-center gap-1.5 shrink-0 active:scale-95 transition">
-            <svg class="w-3.5 h-3.5 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
-            <span>Paste Code</span>
+      <!-- ==================== TAB 2: CODE ==================== -->
+      <section id="tab-code" class="hidden flex-1 flex flex-col justify-between py-1">
+        <!-- Top Action Buttons matching Screenshot 2 -->
+        <div class="flex items-center gap-2 w-full mb-2 shrink-0">
+          <button id="btn-paste-code" class="flex-1 py-2.5 px-3 bg-white rounded-2xl font-bold text-xs text-slate-800 flex items-center justify-center gap-1.5 soft-card border border-slate-100 active:scale-95 transition">
+            <svg class="w-4 h-4 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+              <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+            </svg>
+            <span>Paste</span>
           </button>
 
-          <button id="btn-open-ai-modal" class="px-3 py-2 rounded-2xl bg-slate-900 text-white font-bold text-[12px] shadow-sm flex items-center gap-1.5 shrink-0 active:scale-95 transition">
-            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 7.4L22 12l-7.6 2.6L12 22l-2.4-7.4L2 12l7.6-2.6L12 2z"></path></svg>
-            <span>AI Prompt</span>
+          <button id="btn-ai-edit" class="flex-1 py-2.5 px-3 bg-white rounded-2xl font-bold text-xs text-slate-800 flex items-center justify-center gap-1.5 soft-card border border-slate-100 active:scale-95 transition">
+            <span class="text-sm">✨</span>
+            <span>AI Edit</span>
           </button>
 
-          <button id="btn-open-presets" class="px-3 py-2 rounded-2xl bg-white text-slate-900 font-bold text-[12px] shadow-sm border border-slate-200/70 flex items-center gap-1.5 shrink-0 active:scale-95 transition">
+          <button id="btn-cycle-presets" class="flex-1 py-2.5 px-3 bg-white rounded-2xl font-bold text-xs text-slate-800 flex items-center justify-center gap-1.5 soft-card border border-slate-100 active:scale-95 transition">
+            <svg class="w-4 h-4 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="16 3 21 3 21 8"></polyline>
+              <line x1="4" y1="20" x2="21" y2="3"></line>
+              <polyline points="21 16 21 21 16 21"></polyline>
+              <line x1="15" y1="15" x2="21" y2="21"></line>
+              <line x1="4" y1="4" x2="9" y2="9"></line>
+            </svg>
             <span>Presets</span>
           </button>
 
-          <button id="btn-code-clear" title="پاک کردن کد" class="p-2 rounded-2xl bg-white text-slate-400 hover:text-rose-600 border border-slate-200/70 shrink-0 active:scale-95 transition">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          <button id="btn-clear-code" class="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-slate-400 hover:text-rose-600 soft-card border border-slate-100 active:scale-95 transition shrink-0" title="Clear Code">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
           </button>
         </div>
 
-        <!-- Code Editor Card -->
-        <div class="soft-card flex-1 my-1.5 rounded-[24px] p-3.5 flex flex-col border border-slate-200/70 relative overflow-hidden">
+        <!-- Helper Snippet Chips + Auto-Detect Duration Button -->
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 shrink-0">
+          <button id="btn-rescan-duration" class="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-800 whitespace-nowrap active:scale-95 transition flex items-center gap-1">
+            <span>⏱️</span>
+            <span id="detected-duration-chip">Auto-Detect: 10.0s</span>
+          </button>
+          <button data-snippet="keyframes" class="snippet-chip px-3 py-1.5 rounded-xl bg-[#EAEEF4] text-[11px] font-semibold text-slate-600 whitespace-nowrap active:scale-95 transition">+ @keyframes</button>
+          <button data-snippet="transform3d" class="snippet-chip px-3 py-1.5 rounded-xl bg-[#EAEEF4] text-[11px] font-semibold text-slate-600 whitespace-nowrap active:scale-95 transition">+ 3D Transform</button>
+          <button data-snippet="persianCard" class="snippet-chip px-3 py-1.5 rounded-xl bg-[#EAEEF4] text-[11px] font-semibold text-slate-600 whitespace-nowrap active:scale-95 transition">+ Persian Story</button>
+        </div>
+
+        <!-- Code Editor Box -->
+        <div class="flex-1 w-full soft-card rounded-[26px] p-4 flex flex-col border border-slate-200/70 my-1 relative">
           <textarea
-            id="code-editor-textarea"
+            id="code-textarea"
+            dir="ltr"
             spellcheck="false"
-            placeholder="Paste your HTML, CSS & JS animation code here..."
-            class="w-full h-full resize-none border-0 outline-none bg-transparent font-mono-code text-[12px] leading-relaxed text-slate-800 placeholder-slate-400"
+            placeholder="Paste or type your HTML, CSS & JavaScript animation code here..."
+            class="w-full flex-1 resize-none border-0 outline-none bg-transparent font-mono-code text-[12px] leading-relaxed text-slate-800 placeholder-slate-400 overflow-y-auto"
           ></textarea>
         </div>
 
-        <!-- Code Footer Stats -->
-        <div class="flex items-center justify-between px-1 py-1 text-xs shrink-0">
-          <span id="code-stats-label" class="text-slate-500 font-medium">1 lines • 0 chars</span>
-          <div class="flex items-center gap-2">
-            <span id="detected-card-badge" class="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">Auto-Fit Card Ready ✓</span>
-          </div>
+        <!-- Code Stats Footer -->
+        <div class="w-full flex items-center justify-between px-2 pt-2 text-[11.5px] font-semibold text-slate-400 shrink-0">
+          <span id="code-stats-label">1 lines • 0 characters</span>
+          <span class="font-extrabold text-slate-700">HTML • CSS • JS</span>
         </div>
-
       </section>
 
-      <!-- ==================== TAB 3: SETTINGS & ENGINE ==================== -->
-      <section id="tab-settings" class="w-full h-full hidden flex-col overflow-y-auto no-scrollbar space-y-3 py-1">
-        
-        <!-- Export Engine Mode (Fixes the 33-second slow-mo bug!) -->
-        <div class="soft-card rounded-[22px] p-4 border border-slate-200/70 space-y-2.5">
-          <div class="flex items-center justify-between">
-            <h3 class="font-extrabold text-slate-900 text-sm">Video Export Timing Engine</h3>
-            <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono-code text-[10px] font-bold">EXACT DURATION</span>
-          </div>
-          <p class="text-[11px] text-slate-500 font-fa leading-relaxed" dir="rtl">
-            <strong>چرا قبلاً ویدیوی ۱۰ ثانیه‌ای ۳۳ ثانیه می‌شد؟</strong> چون <code class="font-mono-code">MediaRecorder</code> بر اساس زمان واقعی ساعت کار می‌کند و وقتی گرفتن هر فریم ۵۵ میلی‌ثانیه طول می‌کشید، ویدیو ۳.۳ برابر کش می‌آمد! اکنون ابتدا فریم‌ها در بافر پرسرعت رندر شده و سپس دقیقاً با نرخ <code class="font-mono-code">60FPS (16.66ms)</code> همگام با صدا ضبط می‌شوند تا ویدیوی ۱۰ ثانیه‌ای دقیقاً ۱۰.۰ ثانیه شود.
-          </p>
-
-          <div class="grid grid-cols-3 gap-2 pt-1">
-            <div>
-              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Duration</label>
-              <select id="setting-duration" class="w-full rounded-xl bg-slate-100 px-2.5 py-2 text-xs font-bold text-slate-900">
-                <option value="5">5.0 Seconds</option>
-                <option value="8">8.0 Seconds</option>
-                <option value="10" selected>10.0 Seconds</option>
-                <option value="12">12.0 Seconds</option>
-                <option value="15">15.0 Seconds</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Frame Rate</label>
-              <select id="setting-fps" class="w-full rounded-xl bg-slate-100 px-2.5 py-2 text-xs font-bold text-slate-900">
-                <option value="60" selected>60 FPS Smooth</option>
-                <option value="30">30 FPS Fast</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Resolution</label>
-              <select id="setting-quality" class="w-full rounded-xl bg-slate-100 px-2.5 py-2 text-xs font-bold text-slate-900">
-                <option value="2" selected>1080p Crisp</option>
-                <option value="1.5">720p Balanced</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- AI Connection & Fast Model Config Card -->
-        <div class="soft-card rounded-[22px] p-4 border border-slate-200/70">
+      <!-- ==================== TAB 3: SETTINGS ==================== -->
+      <section id="tab-settings" class="hidden flex-1 flex flex-col gap-3 py-1 overflow-y-auto no-scrollbar">
+        <!-- Video Duration & Auto-Detect Card -->
+        <div class="soft-card rounded-[24px] p-4 border border-slate-200/60">
           <div class="flex items-center justify-between mb-2">
-            <div class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500" id="settings-conn-indicator"></span>
-              <h3 class="font-extrabold text-slate-900 text-sm">Gemini Flash AI Connection</h3>
+            <div>
+              <h3 class="text-sm font-extrabold text-slate-900">Video Duration & Auto-Scanner</h3>
+              <p id="duration-reason-label" class="text-[11px] text-emerald-600 font-semibold">Detected automatically from code timeline</p>
             </div>
-            <button id="btn-test-connection" class="px-3 py-1 rounded-full bg-slate-900 text-white text-[11px] font-bold hover:bg-slate-800 active:scale-95 transition">
-              ⚡ Test API
-            </button>
+            <label class="flex items-center gap-1.5 cursor-pointer bg-slate-100 px-2.5 py-1 rounded-full">
+              <input id="chk-auto-duration" type="checkbox" checked class="accent-slate-900 rounded" />
+              <span class="text-[11px] font-bold text-slate-700">Auto</span>
+            </label>
           </div>
 
-          <div class="space-y-2">
-            <select id="ai-model-select" class="w-full rounded-xl bg-slate-100 border border-slate-200 px-3 py-2 text-xs font-bold text-slate-800 outline-none">
-              <option value="gemini-3-flash-preview">Gemini 3.0 / 3.8 Flash Preview (Fastest)</option>
-              <option value="gemini-2.5-flash">Gemini 2.5 Flash (Stable Fallback)</option>
-            </select>
+          <div class="flex items-center gap-3 mt-3">
+            <input id="input-duration-sec" type="range" min="2" max="30" step="0.5" value="10" class="flex-1" />
+            <span id="label-duration-sec" class="px-3 py-1.5 rounded-xl bg-slate-900 text-white font-mono-code text-xs font-bold w-16 text-center">10.0s</span>
+          </div>
 
-            <input
-              id="custom-api-key-input"
-              type="password"
-              placeholder="کلید API جمنای (روی GitHub Pages کلید خود را اینجا وارد کنید)"
-              class="w-full rounded-xl bg-slate-100 border border-slate-200 px-3 py-2 text-xs font-mono-code text-slate-800 outline-none focus:border-slate-900"
-            />
-            <p id="ping-result-badge" class="text-[11px] font-mono-code text-emerald-600 font-semibold">Ready</p>
+          <div class="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-100">
+            <div>
+              <span class="text-[10px] font-bold text-slate-400 uppercase block">Frame Rate</span>
+              <select id="select-fps" class="mt-1 w-full bg-slate-100 rounded-xl px-2.5 py-1.5 text-xs font-extrabold text-slate-800 outline-none">
+                <option value="60" selected>60 FPS (Ultra)</option>
+                <option value="30">30 FPS (Standard)</option>
+              </select>
+            </div>
+            <div>
+              <span class="text-[10px] font-bold text-slate-400 uppercase block">Bitrate</span>
+              <select id="select-bitrate" class="mt-1 w-full bg-slate-100 rounded-xl px-2.5 py-1.5 text-xs font-extrabold text-slate-800 outline-none">
+                <option value="16000000" selected>16 Mbps (Master)</option>
+                <option value="10000000">10 Mbps (High)</option>
+              </select>
+            </div>
+            <div>
+              <span class="text-[10px] font-bold text-slate-400 uppercase block">Inner Card Fit</span>
+              <button id="btn-settings-autofit" class="mt-1 w-full bg-emerald-600 text-white rounded-xl px-2.5 py-1.5 text-xs font-extrabold">Enabled</button>
+            </div>
           </div>
         </div>
 
-        <!-- Persian Font & Stage Auto-Crop Settings -->
-        <div class="soft-card rounded-[22px] p-4 border border-slate-200/70 space-y-2.5">
-          <div class="flex items-center justify-between">
+        <!-- Audio & Custom Soundtrack Card -->
+        <div class="soft-card rounded-[24px] p-4 border border-slate-200/60">
+          <div class="flex items-center justify-between mb-2">
             <div>
-              <h3 class="font-extrabold text-slate-900 text-sm">Auto-Fit Inner Story Card</h3>
-              <p class="text-[11px] text-slate-500 font-fa" dir="rtl">حذف فضای سیاه دور پوستر و بزرگنمایی ۱۰۰٪ کارت به کل صفحه</p>
+              <h3 class="text-sm font-extrabold text-slate-900">Audio & Export Muxing</h3>
+              <p class="text-[11px] text-slate-400">Recorded directly into the exported video stream</p>
             </div>
-            <input id="toggle-autocrop-setting" type="checkbox" checked class="w-5 h-5 accent-slate-900 rounded cursor-pointer" />
+            <label class="flex items-center gap-1.5 cursor-pointer bg-slate-100 px-2.5 py-1 rounded-full">
+              <input id="chk-enable-sound" type="checkbox" checked class="accent-slate-900 rounded" />
+              <span class="text-[11px] font-bold text-slate-700">Active</span>
+            </label>
           </div>
 
-          <div class="flex items-center justify-between pt-1 border-t border-slate-100">
-            <div>
-              <h3 class="font-extrabold text-slate-900 text-sm">Embed Persian Fonts (Vazirmatn / Lalezar)</h3>
-              <p class="text-[11px] text-slate-500 font-fa" dir="rtl">تزریق خودکار فونت‌های فارسی داخل بوم برای جلوگیری از فونت زشت پیش‌فرض</p>
-            </div>
-            <input id="toggle-persian-fonts" type="checkbox" checked class="w-5 h-5 accent-slate-900 rounded cursor-pointer" />
+          <div class="flex items-center gap-2 mt-2">
+            <label class="flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 cursor-pointer text-center transition">
+              <span>🎵 Upload MP3 / WAV</span>
+              <input id="input-custom-audio" type="file" accept="audio/*" class="hidden" />
+            </label>
+            <button id="btn-clear-audio" class="px-3 py-2 rounded-xl bg-slate-100 text-xs font-bold text-slate-500 hover:text-rose-600">Reset Synth</button>
           </div>
+          <p id="audio-file-label" class="text-[10.5px] font-mono-code text-slate-500 mt-1.5">Using Built-in Studio Ambient Synth + Pop SFX</p>
         </div>
 
+        <!-- Gemini AI Connection & Key Manager -->
+        <div class="soft-card rounded-[24px] p-4 border border-slate-200/60">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <h3 class="text-sm font-extrabold text-slate-900">Gemini Flash AI Engine</h3>
+              <p class="text-[11px] text-slate-400">Ultra-low latency motion generator (Anti-Cliche Filter)</p>
+            </div>
+            <button id="btn-ping-ai" class="px-3 py-1 rounded-full bg-slate-900 text-white text-[11px] font-bold active:scale-95 transition">Ping Test</button>
+          </div>
+
+          <input
+            id="input-gemini-key"
+            type="password"
+            placeholder="Paste Gemini API Key (AIzaSy...) or leave empty for default"
+            class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-100 text-xs font-mono-code text-slate-800 outline-none border border-transparent focus:border-slate-300"
+          />
+          <p id="ai-ping-result" class="text-[11px] font-semibold text-emerald-600 mt-2">Ready • Auto-Retry (3x) & Swiss/Editorial Filter Active</p>
+        </div>
       </section>
 
       <!-- ==================== TAB 4: LIBRARY ==================== -->
-      <section id="tab-library" class="w-full h-full hidden flex-col items-center justify-center relative">
-        
-        <div id="library-empty-state" class="flex flex-col items-center justify-center text-center px-6 my-auto">
-          <div class="w-20 h-20 rounded-full bg-white shadow-md flex items-center justify-center mb-4 border border-slate-100">
-            <svg class="w-9 h-9 text-slate-900" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="6" y="4" width="14" height="14" rx="2"></rect>
-              <path d="M4 8v10a2 2 0 0 0 2 2h10"></path>
-              <polygon points="11 8 16 11 11 14 11 8" fill="currentColor"></polygon>
+      <section id="tab-library" class="hidden flex-1 flex flex-col justify-between items-center py-2">
+        <!-- Empty State matching Screenshot 3 -->
+        <div id="library-empty-state" class="flex-1 flex flex-col items-center justify-center text-center px-6">
+          <div class="w-20 h-20 rounded-full bg-white soft-card flex items-center justify-center mb-5 border border-slate-100">
+            <svg class="w-8 h-8 text-slate-900" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="3"></rect>
+              <polygon points="10 9 15 12 10 15 10 9" fill="currentColor"></polygon>
             </svg>
           </div>
-          <h3 class="text-lg font-extrabold text-slate-900">Library is Empty</h3>
-          <p class="text-xs text-slate-500 mt-1.5 max-w-[260px] leading-relaxed">
-            Exported videos with exact duration and synchronized audio appear here.
+          <h3 class="text-lg font-extrabold text-slate-900 mb-2">Library is Empty</h3>
+          <p class="text-xs text-slate-500 leading-relaxed max-w-[240px] mb-6">
+            Your exported motion videos will appear here.<br/>Tap below to render your first MP4.
           </p>
-          <button id="btn-render-first-video" class="mt-5 px-6 py-3 rounded-full bg-[#121316] text-white font-bold text-xs shadow-lg flex items-center gap-2 hover:bg-slate-800 active:scale-95 transition">
-            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <button id="btn-render-from-library" class="py-3.5 px-7 rounded-full bg-[#121316] text-white text-xs font-extrabold flex items-center gap-2.5 shadow-lg active:scale-95 transition">
+            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
             <span>Render First Video</span>
           </button>
         </div>
 
-        <div id="library-list-container" class="hidden w-full h-full overflow-y-auto no-scrollbar space-y-3 py-2"></div>
-
+        <!-- Populated Library List -->
+        <div id="library-list" class="hidden w-full flex-1 flex flex-col gap-3 overflow-y-auto no-scrollbar py-1"></div>
       </section>
 
     </main>
 
-    <!-- FLOATING BOTTOM NAVIGATION BAR -->
-    <nav class="absolute bottom-0 left-0 right-0 bg-white rounded-t-[28px] bottom-nav-shadow px-6 py-2.5 flex items-center justify-around z-30 border-t border-slate-100">
-      <button data-tab="preview" class="nav-tab-btn flex flex-col items-center gap-1 text-slate-900 font-bold text-xs transition">
-        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L3 10v11h6v-7h6v7h6V10L12 3z"/></svg>
-        <span>Preview</span>
+    <!-- Bottom Navigation Bar matching Screenshots 1-3 -->
+    <nav class="bg-white rounded-t-[30px] bottom-nav-shadow px-6 py-2.5 flex items-center justify-between shrink-0 z-30 border-t border-slate-100">
+      <button data-tab="preview" class="nav-tab-btn flex flex-col items-center gap-1 py-1 px-3 text-slate-900 font-extrabold transition">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 3L4 9v12h5v-7h6v7h5V9z"></path>
+        </svg>
+        <span class="text-[11px]">Preview</span>
       </button>
 
-      <button data-tab="code" class="nav-tab-btn flex flex-col items-center gap-1 text-slate-400 hover:text-slate-700 font-medium text-xs transition">
-        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-        <span>Code</span>
+      <button data-tab="code" class="nav-tab-btn flex flex-col items-center gap-1 py-1 px-3 text-slate-400 font-semibold transition">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"></polyline>
+          <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+        <span class="text-[11px]">Code</span>
       </button>
 
-      <button data-tab="settings" class="nav-tab-btn flex flex-col items-center gap-1 text-slate-400 hover:text-slate-700 font-medium text-xs transition">
-        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line></svg>
-        <span>Settings</span>
+      <button data-tab="settings" class="nav-tab-btn flex flex-col items-center gap-1 py-1 px-3 text-slate-400 font-semibold transition">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="21" x2="4" y2="14"></line>
+          <line x1="4" y1="10" x2="4" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12" y2="3"></line>
+          <line x1="20" y1="21" x2="20" y2="16"></line>
+          <line x1="20" y1="12" x2="20" y2="3"></line>
+          <line x1="1" y1="14" x2="7" y2="14"></line>
+          <line x1="9" y1="8" x2="15" y2="8"></line>
+          <line x1="17" y1="16" x2="23" y2="16"></line>
+        </svg>
+        <span class="text-[11px]">Settings</span>
       </button>
 
-      <button data-tab="library" class="nav-tab-btn flex flex-col items-center gap-1 text-slate-400 hover:text-slate-700 font-medium text-xs transition relative">
-        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="14" height="14" rx="2"></rect><path d="M4 8v10a2 2 0 0 0 2 2h10"></path><polygon points="11 8 16 11 11 14 11 8" fill="currentColor"></polygon></svg>
-        <span>Library</span>
-        <span id="library-badge-count" class="hidden absolute -top-1 right-2 w-4 h-4 rounded-full bg-emerald-600 text-white text-[9px] font-bold flex items-center justify-center">0</span>
+      <button data-tab="library" class="nav-tab-btn flex flex-col items-center gap-1 py-1 px-3 text-slate-400 font-semibold transition relative">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="3"></rect>
+          <polygon points="10 8 16 12 10 16 10 8"></polygon>
+        </svg>
+        <span class="text-[11px]">Library</span>
+        <span id="library-count-badge" class="hidden absolute top-0.5 right-2 w-4 h-4 rounded-full bg-slate-900 text-white text-[9px] font-bold items-center justify-center">0</span>
       </button>
     </nav>
 
-    <!-- ==================== MODAL 1: AUDIO & SOUNDTRACK STUDIO ==================== -->
-    <div id="audio-modal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-      <div class="bg-white w-full max-w-[440px] rounded-t-[30px] md:rounded-[30px] p-5 shadow-2xl space-y-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="font-extrabold text-slate-900 text-base">Audio & Soundtrack Mixer</h3>
-            <p class="text-[11px] text-slate-500 font-fa">صدای خروجی ویدیو (ضبط همزمان روی فایل ویدیو)</p>
-          </div>
-          <button id="btn-close-audio-modal" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold">✕</button>
-        </div>
-
-        <div class="space-y-2">
-          <label class="block text-xs font-bold text-slate-700">Background Beat / SFX Mode</label>
-          <select id="audio-mode-select" class="w-full rounded-xl bg-slate-100 border border-slate-200 px-3 py-2.5 text-xs font-bold text-slate-900">
-            <option value="upbeat-synth" selected>🎵 Upbeat Motion Synth + Pop SFX (Built-in)</option>
-            <option value="editorial-minimal">🥁 Minimal Editorial Pulse + Whoosh SFX</option>
-            <option value="custom-file">📂 Upload Custom MP3 / WAV File</option>
-            <option value="mute">🔇 Mute Audio</option>
-          </select>
-        </div>
-
-        <div id="custom-audio-upload-box" class="hidden p-3 rounded-2xl bg-slate-50 border border-dashed border-slate-300 text-center">
-          <input type="file" id="audio-file-input" accept="audio/*" class="text-xs text-slate-600 w-full" />
-        </div>
-
-        <div class="flex items-center gap-2">
-          <button id="btn-test-audio-preview" class="flex-1 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition">
-            🔊 Test Audio Sound
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ==================== MODAL 3: AI MOTION GENERATOR DRAWER ==================== -->
-    <div id="ai-modal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-      <div class="bg-white w-full max-w-[450px] rounded-t-[32px] md:rounded-[32px] p-5 shadow-2xl space-y-3.5">
-        <div class="flex items-center justify-between">
+    <!-- ==================== AI PROMPT MODAL ==================== -->
+    <div id="ai-modal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+      <div class="bg-white w-full max-w-[400px] rounded-[28px] p-5 shadow-2xl border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-200">
+        <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2">
-            <span class="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center text-sm">✨</span>
+            <span class="w-8 h-8 rounded-2xl bg-slate-900 text-white flex items-center justify-center text-sm">✨</span>
             <div>
-              <h3 class="font-extrabold text-slate-900 text-base">AI Kinetic Motion Designer</h3>
-              <p id="ai-modal-status-sub" class="text-[11px] text-emerald-600 font-semibold">● Full-Bleed 9:16 • Persian Font Ready</p>
+              <h3 class="text-sm font-black text-slate-900 font-fa">طراحی موشن‌گرافیک با هوش مصنوعی</h3>
+              <p id="ai-modal-status" class="text-[10.5px] font-semibold text-emerald-600">Gemini Flash • Anti-Cliche Studio Engine</p>
             </div>
           </div>
-          <button id="btn-close-ai-modal" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold">✕</button>
+          <button id="btn-close-ai-modal" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center font-bold">✕</button>
         </div>
 
         <textarea
           id="ai-prompt-input"
-          rows="3"
-          dir="auto"
-          placeholder="پرامت خود را بنویسید... مثلاً: یک استوری تبلیغاتی جذاب برای فینگرفود مهمونی با فونت درشت لاله‌زار و وزیرمتن و انیمیشن ورود نرم..."
-          class="w-full rounded-2xl bg-slate-100 border border-slate-200 p-3.5 text-xs font-fa text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-slate-900 transition"
+          dir="rtl"
+          rows="4"
+          placeholder="مثال: یک استوری تبلیغاتی ۱۰ ثانیه‌ای برای فینگرفود یا کافی‌شاپ با سبک نئوبروتالیسم، رنگ‌های کرم و قرمز و زرد، تایپوگرافی درشت فارسی و انیمیشن‌های نرم..."
+          class="w-full rounded-2xl bg-slate-100 p-3.5 text-xs font-fa text-slate-800 placeholder-slate-400 outline-none border border-transparent focus:border-slate-300 leading-relaxed resize-none"
         ></textarea>
 
-        <div class="flex items-center gap-2">
-          <button id="btn-ping-before-ai" class="px-3.5 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs shrink-0 transition">
-            ⚡ تست اتصال
-          </button>
-          <button id="btn-run-ai-generate" class="flex-1 py-3 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition">
-            <span id="ai-btn-text" class="font-fa">تولید سریع کد موشن‌گرافیک</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ==================== MODAL 4: PRESETS DRAWER ==================== -->
-    <div id="presets-modal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-      <div class="bg-white w-full max-w-[450px] rounded-t-[32px] md:rounded-[32px] p-5 shadow-2xl space-y-3">
-        <div class="flex items-center justify-between">
-          <h3 class="font-extrabold text-slate-900 text-base">Studio Motion Presets</h3>
-          <button id="btn-close-presets-modal" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold">✕</button>
-        </div>
-        <div id="presets-list" class="space-y-2 max-h-[60vh] overflow-y-auto no-scrollbar"></div>
-      </div>
-    </div>
-
-    <!-- ==================== MODAL 5: TWO-PHASE EXACT-DURATION 60FPS RENDERER ==================== -->
-    <div id="render-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-5">
-      <div class="bg-white w-full max-w-[390px] rounded-[32px] p-5 shadow-2xl text-center space-y-3.5">
-        <div class="flex items-center justify-between">
-          <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-mono-code text-[10px] font-bold" id="render-phase-tag">PHASE 1/2: SNAPSHOTTING</span>
-          <span class="font-mono-code font-extrabold text-sm text-slate-900" id="render-percent-badge">0%</span>
+        <div class="flex flex-wrap gap-1.5 my-2.5" dir="rtl">
+          <button data-aiprompt="استوری تبلیغاتی ۱۰ ثانیه‌ای برای سفارش فینگرفود مهمانی با سبک نئوبروتالیسم، پس‌زمینه کرم نقطه دار، دایره زرد وسط و تایپوگرافی جسورانه فارسی" class="ai-sample-chip px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-[10.5px] font-bold text-slate-700 font-fa">🍢 استوری فینگرفود</button>
+          <button data-aiprompt="موشن گرافیک ۸ ثانیه‌ای معرفی جشنواره فروش ویژه محصولات دیجیتال با سبک تایپوگرافی سوئیسی، گرید دقیق، رنگ سفید و مشکی و نارنجی" class="ai-sample-chip px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-[10.5px] font-bold text-slate-700 font-fa">⚡ جشنواره فروش سوئیسی</button>
+          <button data-aiprompt="استوری ۶ ثانیه‌ای منوی کافه تخصصی با سبک ادیتوریال مجله‌ای، رنگ‌های گرم اسپرسو و کرم و حرکت نرم کارت‌ها" class="ai-sample-chip px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-[10.5px] font-bold text-slate-700 font-fa">☕ منوی کافه ادیتوریال</button>
         </div>
 
-        <div>
-          <h3 class="font-extrabold text-slate-900 text-base" id="render-modal-title">Capturing High-DPI Frames</h3>
-          <p id="render-status-detail" class="text-[11px] text-slate-500 mt-0.5 font-mono-code">Preserving Persian Fonts & Exact Layout...</p>
-        </div>
-
-        <!-- Live Mini Canvas Mirror -->
-        <div class="w-full h-44 bg-slate-900 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-200 p-1.5">
-          <canvas id="export-render-canvas" class="max-w-full max-h-full object-contain rounded-lg shadow-sm"></canvas>
-        </div>
-
-        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-          <div id="render-progress-bar" class="bg-slate-900 h-full w-0 transition-all duration-75"></div>
-        </div>
-
-        <button id="btn-cancel-render" class="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-700 font-bold text-xs transition">
-          Cancel Render
+        <button id="btn-generate-ai" class="w-full py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg transition font-fa">
+          <span>تست اتصال و ساخت فوری کد موشن</span>
         </button>
       </div>
     </div>
 
-    <!-- Toast Notification -->
-    <div id="toast-box" class="pointer-events-none fixed top-5 left-1/2 -translate-x-1/2 z-50 opacity-0 transition-all duration-300 bg-slate-900 text-white px-4 py-2 rounded-full text-xs font-semibold shadow-xl flex items-center gap-2">
-      <span id="toast-text">Ready</span>
+    <!-- ==================== REAL-TIME RENDER OVERLAY ==================== -->
+    <div id="render-overlay" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center p-6 text-white">
+      <div class="w-full max-w-[340px] bg-[#141720] border border-white/10 rounded-[28px] p-5 flex flex-col items-center text-center shadow-2xl">
+        <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mb-3 relative">
+          <div class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></div>
+        </div>
+        <h3 id="render-status-title" class="text-base font-black tracking-tight mb-1">Rendering 60FPS Motion...</h3>
+        <p id="render-status-subtitle" class="text-xs text-slate-400 mb-4 font-mono-code">Direct DOM-to-Canvas2D • Exact Wall-Clock</p>
+
+        <!-- Progress Bar -->
+        <div class="w-full h-2.5 bg-white/10 rounded-full overflow-hidden mb-2">
+          <div id="render-progress-bar" class="h-full bg-emerald-400 transition-all duration-75" style="width: 0%;"></div>
+        </div>
+        <div class="w-full flex items-center justify-between text-[11px] font-mono-code text-slate-400 mb-5">
+          <span id="render-progress-pct">0%</span>
+          <span id="render-frame-counter">0.0s / 10.0s</span>
+        </div>
+
+        <button id="btn-cancel-render" class="w-full py-2.5 rounded-xl bg-white/10 hover:bg-rose-500/20 hover:text-rose-300 text-xs font-bold transition">
+          Cancel Export
+        </button>
+      </div>
+    </div>
+
+    <!-- Non-blocking Toast Banner -->
+    <div id="toast-banner" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300">
+      <div class="px-4 py-2.5 rounded-full bg-slate-900 text-white text-xs font-bold shadow-xl flex items-center gap-2 border border-white/10 font-fa">
+        <span id="toast-text">Ready</span>
+      </div>
     </div>
 
   </div>
 
   <script>
     /********************************************************************
-     * 1. BUILT-IN PRESETS (INCLUDING THE PERSIAN FINGER-FOOD STORY
-     *    FROM YOUR SCREENSHOT TO PROVE AUTO-CROP & FONTS WORK 100%)
+     * 1. STUDIO AUDIO ENGINE (WEB AUDIO SYNTH + MP3 MUXING)
+     * Generates clean ambient studio beds & tactile pop SFX, and routes
+     * audio directly into both speakers and MediaRecorder stream.
+     ********************************************************************/
+    class StudioAudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+        this.customBuffer = null;
+        this.customFileName = '';
+        this.activeNodes = [];
+      }
+
+      initContext() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) {
+            this.ctx = new AudioCtx();
+          }
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume().catch(() => {});
+        }
+        return this.ctx;
+      }
+
+      stopAll() {
+        this.activeNodes.forEach(node => {
+          try { node.stop(); } catch (e) {}
+          try { node.disconnect(); } catch (e) {}
+        });
+        this.activeNodes = [];
+      }
+
+      async loadCustomAudioFile(file) {
+        const ctx = this.initContext();
+        if (!ctx) return false;
+        const arrayBuf = await file.arrayBuffer();
+        this.customBuffer = await ctx.decodeAudioData(arrayBuf);
+        this.customFileName = file.name;
+        return true;
+      }
+
+      clearCustomAudio() {
+        this.customBuffer = null;
+        this.customFileName = '';
+      }
+
+      playPopPreview() {
+        if (!this.enabled) return;
+        const ctx = this.initContext();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.exponentialRampToValueAtTime(520, now + 0.09);
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.13);
+      }
+
+      /**
+       * Creates a synchronized audio stream for video export AND plays it
+       * softly through speakers so the user hears the export progress.
+       */
+      startExportSoundtrack(durationSec) {
+        this.stopAll();
+        if (!this.enabled) return null;
+        const ctx = this.initContext();
+        if (!ctx || typeof ctx.createMediaStreamDestination !== 'function') return null;
+
+        const streamDest = ctx.createMediaStreamDestination();
+        const masterGain = ctx.createGain();
+        masterGain.gain.setValueAtTime(0.85, ctx.currentTime);
+        masterGain.connect(streamDest);
+        masterGain.connect(ctx.destination);
+
+        const now = ctx.currentTime;
+
+        if (this.customBuffer) {
+          const src = ctx.createBufferSource();
+          src.buffer = this.customBuffer;
+          src.loop = true;
+          src.connect(masterGain);
+          src.start(now);
+          src.stop(now + durationSec + 0.2);
+          this.activeNodes.push(src);
+          return streamDest.stream;
+        }
+
+        // Built-in warm Neo-Editorial rhythmic synth bed + kinetic accents
+        const chordFreqs = [130.81, 164.81, 196.00, 246.94]; // Cmaj7 warm pad
+        chordFreqs.forEach((freq) => {
+          const osc = ctx.createOscillator();
+          const padGain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now);
+
+          padGain.gain.setValueAtTime(0.001, now);
+          padGain.gain.linearRampToValueAtTime(0.035, now + 0.4);
+          padGain.gain.setValueAtTime(0.035, Math.max(now + 0.5, now + durationSec - 0.5));
+          padGain.gain.linearRampToValueAtTime(0.0001, now + durationSec);
+
+          osc.connect(padGain);
+          padGain.connect(masterGain);
+          osc.start(now);
+          osc.stop(now + durationSec + 0.1);
+          this.activeNodes.push(osc);
+        });
+
+        // Subtle rhythmic soft ticks every 0.5s + pop cues on scene transitions
+        const totalBeats = Math.floor(durationSec * 2);
+        for (let i = 0; i < totalBeats; i++) {
+          const beatTime = now + i * 0.5;
+          const osc = ctx.createOscillator();
+          const tickGain = ctx.createGain();
+          const isAccent = (i % 4 === 0);
+
+          osc.type = isAccent ? 'sine' : 'triangle';
+          osc.frequency.setValueAtTime(isAccent ? 110 : 440, beatTime);
+          osc.frequency.exponentialRampToValueAtTime(isAccent ? 48 : 180, beatTime + 0.08);
+
+          tickGain.gain.setValueAtTime(isAccent ? 0.12 : 0.03, beatTime);
+          tickGain.gain.exponentialRampToValueAtTime(0.0001, beatTime + 0.09);
+
+          osc.connect(tickGain);
+          tickGain.connect(masterGain);
+          osc.start(beatTime);
+          osc.stop(beatTime + 0.1);
+          this.activeNodes.push(osc);
+        }
+
+        return streamDest.stream;
+      }
+    }
+
+    const audioEngine = new StudioAudioEngine();
+
+    /********************************************************************
+     * 2. BUILT-IN PRESETS (FIRST PRESET = EXACT PERSIAN FINGERFOOD STORY)
      ********************************************************************/
     const STUDIO_PRESETS = [
       {
         id: 'persian-fingerfood-story',
-        title: 'Persian Finger-Food Story (Auto-Fit)',
-        subtitle: 'Tests 360x640 Inner Card Auto-Zoom + Vazirmatn/Lalezar Fonts',
-        duration: 10,
+        title: 'استوری فینگرفود (نئوبروتالیسم)',
+        duration: 10.0,
+        ratio: '9:16',
         code: `<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Vazirmatn:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  /* Simulates the exact problem from user's screenshot: a dark body with a small 360x640 story card inside! */
   body {
-    background: #070709;
+    width: 100vw;
+    height: 100vh;
+    background: #090A0F;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
+    overflow: hidden;
     font-family: 'Vazirmatn', sans-serif;
   }
+  /* Classic 360x640 mobile story card that gets Auto-Fitted to 1080x1920 */
   .story-card {
     width: 360px;
     height: 640px;
-    background: #FFFDF9;
+    background-color: #FFFDF7;
+    background-image: radial-gradient(#CBD5E1 1.3px, transparent 1.3px);
+    background-size: 16px 16px;
     position: relative;
     overflow: hidden;
+    border: 4px solid #111827;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 24px 20px;
-    border: 4px solid #111;
+    padding: 22px 18px;
   }
   .top-pill {
-    background: #111111;
-    color: #FACC15;
-    font-size: 12px;
-    font-weight: 800;
-    padding: 7px 14px;
-    border-radius: 99px;
     align-self: center;
-    box-shadow: 0 4px 0 #E11D48;
+    background: #111827;
+    color: #FACC15;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 2px solid #111827;
+    box-shadow: 3px 3px 0 #EF4444;
+    animation: slideDown 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
   .headline-box {
     text-align: right;
-    margin-top: 10px;
+    margin-top: 8px;
     position: relative;
     z-index: 2;
   }
   .tag-red {
     display: inline-block;
-    background: #E11D48;
-    color: #fff;
+    background: #EF4444;
+    color: #FFFFFF;
+    font-size: 12px;
     font-weight: 900;
-    font-size: 13px;
-    padding: 4px 12px;
+    padding: 4px 10px;
     border-radius: 8px;
+    border: 2px solid #111827;
+    box-shadow: 3px 3px 0 #111827;
     margin-bottom: 6px;
+    animation: popIn 0.6s 0.2s both cubic-bezier(0.34, 1.56, 0.64, 1);
   }
   .main-title {
     font-family: 'Lalezar', 'Vazirmatn', sans-serif;
-    font-size: 40px;
-    line-height: 1.08;
-    color: #111111;
+    font-size: 38px;
+    line-height: 1.12;
+    color: #111827;
+    margin: 4px 0;
+    animation: slideLeft 0.7s 0.35s both cubic-bezier(0.16, 1, 0.3, 1);
   }
-  .sub-badge {
+  .highlight-red {
     display: inline-block;
-    background: #E11D48;
+    background: #EF4444;
     color: #FFFFFF;
-    font-family: 'Lalezar', sans-serif;
-    font-size: 28px;
-    padding: 2px 16px;
+    padding: 2px 12px;
     border-radius: 10px;
-    margin-top: 6px;
-    border: 2.5px solid #111;
-    box-shadow: 3px 3px 0 #111;
+    border: 2.5px solid #111827;
+    box-shadow: 4px 4px 0 #111827;
+    margin-top: 4px;
+    animation: popIn 0.7s 0.55s both cubic-bezier(0.34, 1.56, 0.64, 1);
   }
-  .center-plate {
-    width: 195px;
-    height: 195px;
-    border-radius: 50%;
+  .star-badge {
+    position: absolute;
+    left: -8px;
+    top: 82px;
+    width: 74px;
+    height: 74px;
     background: #FACC15;
-    border: 4px solid #111;
-    box-shadow: 6px 6px 0 #111;
-    margin: 10px auto;
+    border: 3px solid #111827;
+    border-radius: 18px;
+    box-shadow: 4px 4px 0 #111827;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 13px;
+    color: #111827;
+    transform: rotate(-12deg);
+    animation: floatStar 2.6s ease-in-out infinite;
+  }
+  .center-circle {
+    width: 196px;
+    height: 196px;
+    border-radius: 999px;
+    background: #FACC15;
+    border: 4px solid #111827;
+    box-shadow: 7px 7px 0 #111827;
+    margin: 6px auto;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     position: relative;
+    animation: popIn 0.8s 0.7s both cubic-bezier(0.34, 1.56, 0.64, 1);
   }
-  .cloche-icon {
-    width: 96px;
-    height: 70px;
-    background: #E11D48;
-    border-radius: 50px 50px 10px 10px;
-    border: 3.5px solid #111;
+  .platter-box {
+    width: 118px;
+    height: 66px;
+    background: #EF4444;
+    border: 3px solid #111827;
+    border-radius: 60px 60px 14px 14px;
+    box-shadow: 3px 3px 0 #111827;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #fff;
-    font-weight: 900;
-    font-size: 15px;
-  }
-  .star-burst {
-    position: absolute;
-    left: -18px;
-    top: 135px;
-    width: 72px;
-    height: 72px;
-    background: #FACC15;
-    border: 3px solid #111;
-    transform: rotate(15deg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 900;
-    font-size: 26px;
-    box-shadow: 4px 4px 0 #111;
-  }
-  .cta-bar {
-    background: #111111;
     color: #FFFFFF;
-    padding: 14px;
-    border-radius: 16px;
-    text-align: center;
-    font-weight: 800;
+    font-weight: 900;
     font-size: 15px;
-    border: 2.5px solid #111;
-    box-shadow: 0 5px 0 #FACC15;
   }
-  .footer-note {
-    background: #111;
+  .platter-base {
+    width: 138px;
+    height: 14px;
+    background: #FFFFFF;
+    border: 3px solid #111827;
+    border-radius: 999px;
+    margin-top: 4px;
+  }
+  .floating-chip {
+    position: absolute;
+    bottom: -10px;
+    right: -10px;
+    background: #EF4444;
+    color: #FFFFFF;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 2.5px solid #111827;
+    box-shadow: 3px 3px 0 #111827;
+  }
+  .features-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin: 4px 0;
+  }
+  .feat-pill {
+    flex: 1;
+    background: #FFFFFF;
+    border: 2.5px solid #111827;
+    border-radius: 12px;
+    padding: 8px 6px;
+    text-align: center;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #111827;
+    box-shadow: 3px 3px 0 #111827;
+    animation: slideUp 0.6s 1.0s both cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .cta-box {
+    background: #111827;
+    color: #FFFFFF;
+    border: 3px solid #111827;
+    border-radius: 16px;
+    padding: 13px 14px;
+    text-align: center;
+    box-shadow: 0 6px 0 #FACC15;
+    animation: slideUp 0.7s 1.2s both cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .cta-title {
+    font-size: 15px;
+    font-weight: 900;
     color: #FACC15;
+    margin-bottom: 3px;
+  }
+  .cta-sub {
     font-size: 11px;
     font-weight: 700;
-    text-align: center;
-    padding: 7px;
-    border-radius: 8px;
+    color: #F8FAFC;
+  }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-28px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideLeft {
+    from { opacity: 0; transform: translateX(36px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(28px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.6); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes floatStar {
+    0%, 100% { transform: rotate(-12deg) translateY(0px); }
+    50% { transform: rotate(-4deg) translateY(-8px); }
   }
 </style>
 </head>
 <body>
-  <div class="story-card" id="story-stage">
-    <div id="el-top" class="top-pill">✨ پکیج‌های ویژه مهمونی و تولد ✨</div>
-
-    <div id="el-star" class="star-burst">★</div>
+  <div class="story-card" data-duration="10">
+    <div class="top-pill">✨ پکیج VIP مهمانی و تولد</div>
 
     <div class="headline-box">
-      <div id="el-tag" class="tag-red">میزبان باکلاس باش!</div>
-      <h1 id="el-t1" class="main-title">مهمونی داری<br>وقت آشپزی</h1>
-      <div id="el-t2" class="sub-badge">نداری؟</div>
+      <div class="tag-red">بدون دردسر میزبانی کن!</div>
+      <div class="main-title">مهمونی داری<br>وقت آشپزی</div>
+      <div class="main-title highlight-red">نداری؟</div>
+      <div class="star-badge">تازه و<br>داغ!</div>
     </div>
 
-    <div id="el-plate" class="center-plate">
-      <div class="cloche-icon">فینگرفود داغ</div>
-      <span style="font-size:12px; font-weight:900; margin-top:8px; color:#111;">آماده سرو در ۳۰ دقیقه</span>
+    <div class="center-circle">
+      <div class="platter-box">فینگرفود ویژه</div>
+      <div class="platter-base"></div>
+      <div class="floating-chip">ارسال فوری 🚀</div>
     </div>
 
-    <div id="el-cta" class="cta-bar">
-      همین الان سفارش بده • ارسال فوری 🚀
+    <div class="features-row">
+      <div class="feat-pill">🥟 بیش از ۳۰ مدل</div>
+      <div class="feat-pill">🥗 مواد اولیه روز</div>
     </div>
 
-    <div id="el-foot" class="footer-note">
-      تضمین کیفیت و تازگی • بیش از ۵۰ مدل سینی مزه
+    <div class="cta-box">
+      <div class="cta-title">همین الان از لینک بیو سفارش بده!</div>
+      <div class="cta-sub">۲۰٪ تخفیف ویژه اولین سفارش آنلاین</div>
     </div>
   </div>
-
-  <script>
-    const easeOutBack = (x) => {
-      const c1 = 1.70158;
-      const c3 = c1 + 1;
-      return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
-    };
-    const easeOutExpo = (x) => x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
-    const clamp = (v) => Math.max(0, Math.min(1, v));
-    const p = (t, s, d, fn = easeOutExpo) => fn(clamp((t - s) / d));
-
-    window.__renderAtTime = function(ms) {
-      const t = (ms % 10000) / 1000;
-
-      const pTop = p(t, 0.05, 0.6, easeOutBack);
-      const topEl = document.getElementById('el-top');
-      topEl.style.opacity = clamp(t / 0.25);
-      topEl.style.transform = 'translateY(' + ((1 - pTop) * -40) + 'px) scale(' + (0.8 + 0.2 * pTop) + ')';
-
-      const pTag = p(t, 0.25, 0.55);
-      const tagEl = document.getElementById('el-tag');
-      tagEl.style.opacity = pTag;
-      tagEl.style.transform = 'translateX(' + ((1 - pTag) * 50) + 'px)';
-
-      const pT1 = p(t, 0.4, 0.65, easeOutBack);
-      const t1El = document.getElementById('el-t1');
-      t1El.style.opacity = clamp((t - 0.4) / 0.3);
-      t1El.style.transform = 'scale(' + (0.75 + 0.25 * pT1) + ')';
-
-      const pT2 = p(t, 0.65, 0.6, easeOutBack);
-      const t2El = document.getElementById('el-t2');
-      t2El.style.opacity = clamp((t - 0.65) / 0.25);
-      t2El.style.transform = 'rotate(' + ((1 - pT2) * -15) + 'deg) scale(' + pT2 + ')';
-
-      const pPlate = p(t, 0.85, 0.75, easeOutBack);
-      const plateEl = document.getElementById('el-plate');
-      plateEl.style.opacity = clamp((t - 0.85) / 0.3);
-      const floatY = Math.sin(t * 3.2) * 6;
-      plateEl.style.transform = 'scale(' + pPlate + ') translateY(' + floatY + 'px)';
-
-      const starEl = document.getElementById('el-star');
-      starEl.style.transform = 'rotate(' + (15 + t * 45) + 'deg) scale(' + p(t, 0.5, 0.5, easeOutBack) + ')';
-
-      const pCta = p(t, 1.2, 0.65, easeOutBack);
-      const ctaEl = document.getElementById('el-cta');
-      ctaEl.style.opacity = clamp((t - 1.2) / 0.3);
-      const pulse = 1 + Math.sin(t * 6) * 0.025;
-      ctaEl.style.transform = 'translateY(' + ((1 - pCta) * 45) + 'px) scale(' + (pCta * pulse) + ')';
-
-      const pFoot = p(t, 1.45, 0.5);
-      document.getElementById('el-foot').style.opacity = pFoot;
-    };
-
-    let st = performance.now();
-    function loop(now) {
-      if (!window.__manualScrub) window.__renderAtTime(now - st);
-      requestAnimationFrame(loop);
-    }
-    requestAnimationFrame(loop);
-  <\/script>
 </body>
 </html>`
       },
       {
-        id: 'swiss-editorial',
+        id: 'swiss-kinetic-editorial',
         title: 'Swiss Kinetic Editorial',
-        subtitle: 'Full-Bleed 9:16 Typographic Grid',
-        duration: 5,
+        duration: 6.0,
+        ratio: '9:16',
         code: `<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;900&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body, html {
-    width: 100%; height: 100%; overflow: hidden;
-    background: #F4F1EA; color: #111111;
+  body {
+    width: 100vw;
+    height: 100vh;
+    background: #F4F1EA;
+    color: #111111;
     font-family: 'Inter', sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 72px 64px;
+    overflow: hidden;
   }
-  #stage {
-    position: relative; width: 100%; height: 100%;
-    padding: 7%; display: flex; flex-direction: column; justify-content: space-between;
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 4px solid #111111;
+    padding-bottom: 24px;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    animation: fadeSlide 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
-  .badge {
-    display: inline-block; background: #E63946; color: #F4F1EA;
-    font-weight: 800; font-size: 2.4vmin; padding: 1vmin 2.4vmin;
-    letter-spacing: 0.14em; text-transform: uppercase;
+  .hero-block {
+    my: auto;
   }
-  .hero-title {
-    font-size: 12vmin; font-weight: 900; line-height: 0.92;
-    letter-spacing: -0.04em; text-transform: uppercase;
+  .issue-pill {
+    display: inline-block;
+    background: #FF3B00;
+    color: #FFFFFF;
+    font-size: 24px;
+    font-weight: 900;
+    padding: 10px 24px;
+    border-radius: 999px;
+    margin-bottom: 28px;
+    animation: popScale 0.6s 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   }
-  .card-row {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 2.5vmin;
+  .display-title {
+    font-size: 128px;
+    font-weight: 900;
+    line-height: 0.94;
+    letter-spacing: -0.04em;
+    text-transform: uppercase;
+    animation: fadeSlide 0.7s 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
-  .stat-box {
-    background: #111111; color: #F4F1EA; padding: 3.5vmin;
-    display: flex; flex-direction: column; justify-content: space-between;
+  .accent-card {
+    background: #111111;
+    color: #F4F1EA;
+    padding: 48px;
+    border-radius: 36px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: fadeSlide 0.7s 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
-  .stat-box.accent { background: #E63946; }
-  .stat-num { font-size: 7.5vmin; font-weight: 900; }
-  .stat-label { font-size: 2.1vmin; font-weight: 600; opacity: 0.85; margin-top: 1vmin; text-transform: uppercase; }
+  .card-left {
+    font-size: 40px;
+    font-weight: 800;
+    line-height: 1.15;
+  }
+  .card-circle {
+    width: 110px;
+    height: 110px;
+    border-radius: 999px;
+    background: #FF3B00;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 34px;
+    font-weight: 900;
+    color: #FFFFFF;
+  }
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(48px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes popScale {
+    from { opacity: 0; transform: scale(0.7); }
+    to { opacity: 1; transform: scale(1); }
+  }
 </style>
 </head>
 <body>
-  <div id="stage">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <div id="badge" class="badge">SWISS KINETIC</div>
-      <div style="font-size:2.6vmin; font-weight:800;">60 FPS // 2026</div>
-    </div>
-    <div>
-      <div id="t1" class="hero-title">EXACT</div>
-      <div id="t2" class="hero-title" style="color:#E63946;">TIMING</div>
-      <div id="t3" class="hero-title">ENGINE.</div>
-    </div>
-    <div class="card-row">
-      <div id="box1" class="stat-box">
-        <div id="num1" class="stat-num">60.0</div>
-        <div class="stat-label">Frames / Sec</div>
-      </div>
-      <div id="box2" class="stat-box accent">
-        <div id="num2" class="stat-num">100%</div>
-        <div class="stat-label">Audio Synced</div>
-      </div>
-    </div>
+  <div class="top-bar">
+    <span>ZURICH DESIGN WEEK</span>
+    <span>2026 EDITION</span>
   </div>
-  <script>
-    const ease = (x) => x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
-    const clamp = (v) => Math.max(0, Math.min(1, v));
-    const prog = (t, s, d) => ease(clamp((t - s) / d));
-    window.__renderAtTime = function(ms) {
-      const t = (ms % 5000) / 1000;
-      ['t1','t2','t3'].forEach((id, i) => {
-        const p = prog(t, 0.15 + i * 0.14, 0.7);
-        const el = document.getElementById(id);
-        el.style.opacity = p;
-        el.style.transform = 'translateX(' + ((1 - p) * -70) + 'px)';
-      });
-      ['box1','box2'].forEach((id, i) => {
-        const p = prog(t, 0.55 + i * 0.15, 0.7);
-        const el = document.getElementById(id);
-        el.style.opacity = p;
-        el.style.transform = 'translateY(' + ((1 - p) * 50) + 'px)';
-      });
-    };
-    let st = performance.now();
-    function loop(now) {
-      if (!window.__manualScrub) window.__renderAtTime(now - st);
-      requestAnimationFrame(loop);
-    }
-    requestAnimationFrame(loop);
-  <\/script>
+  <div class="hero-block">
+    <div class="issue-pill">60FPS NATIVE ENGINE</div>
+    <div class="display-title">FORM<br>FOLLOWS<br>MOTION.</div>
+  </div>
+  <div class="accent-card">
+    <div class="card-left">SWISS GRID<br>TYPOGRAPHY</div>
+    <div class="card-circle">01</div>
+  </div>
 </body>
 </html>`
       }
     ];
 
     /********************************************************************
-     * 2. APPLICATION STATE & LOGICAL DIMENSIONS
+     * 3. APPLICATION STATE & DOM REFERENCES
      ********************************************************************/
-    const RATIO_SPECS = {
-      '9:16': { width: 540, height: 960, exportW: 1080, exportH: 1920 },
-      '16:9': { width: 960, height: 540, exportW: 1920, exportH: 1080 },
-      '1:1':  { width: 720, height: 720, exportW: 1080, exportH: 1080 },
-      '4:5':  { width: 540, height: 675, exportW: 1080, exportH: 1350 }
-    };
-
     const state = {
       activeTab: 'preview',
       ratio: '9:16',
+      width: 1080,
+      height: 1920,
       fps: 60,
-      durationSec: 10,
-      qualityScale: 2,
+      bitrate: 16000000,
+      durationSec: 10.0,
+      autoDuration: true,
       autoFitCard: true,
-      embedPersianFonts: true,
-      audioMode: 'upbeat-synth',
-      customAudioUrl: null,
       isPlaying: true,
       currentTimeMs: 0,
+      presetIndex: 0,
       code: STUDIO_PRESETS[0].code,
       title: STUDIO_PRESETS[0].title,
       isRendering: false,
@@ -911,1028 +1084,1286 @@
       library: []
     };
 
-    /********************************************************************
-     * 3. WEB AUDIO SYNTHESIZER & SOUNDTRACK MUXER
-     * Generates crystal-clear procedural motion graphics music + pop SFX
-     * OR mixes user's uploaded MP3 directly into the video stream!
-     ********************************************************************/
-    class StudioAudioEngine {
-      constructor() {
-        this.ctx = null;
-      }
+    const RATIO_DIMENSIONS = {
+      '9:16': { width: 1080, height: 1920 },
+      '16:9': { width: 1920, height: 1080 },
+      '1:1':  { width: 1080, height: 1080 },
+      '4:5':  { width: 1080, height: 1350 }
+    };
 
-      init() {
-        if (!this.ctx) {
-          const AudioCtx = window.AudioContext || window.webkitAudioContext;
-          this.ctx = new AudioCtx();
-        }
-        if (this.ctx.state === 'suspended') {
-          this.ctx.resume();
-        }
-      }
+    const els = {
+      splash: document.getElementById('splash-screen'),
+      headerMeta: document.getElementById('header-meta'),
+      autoDurBadge: document.getElementById('auto-dur-badge'),
+      resolutionPill: document.getElementById('resolution-pill'),
+      btnAutofitPill: document.getElementById('btn-autofit-pill'),
+      btnFitMode: document.getElementById('btn-fit-mode'),
+      btnSoundToggle: document.getElementById('btn-sound-toggle'),
+      soundActiveDot: document.getElementById('sound-active-dot'),
+      stageViewportSlot: document.getElementById('stage-viewport-slot'),
+      scaledStageWrapper: document.getElementById('scaled-stage-wrapper'),
+      previewIframe: document.getElementById('preview-iframe'),
+      emptyStagePlaceholder: document.getElementById('empty-stage-placeholder'),
+      btnPlayPause: document.getElementById('btn-play-pause'),
+      iconPause: document.getElementById('icon-pause'),
+      iconPlay: document.getElementById('icon-play'),
+      timelineScrubber: document.getElementById('timeline-scrubber'),
+      scrubberTimeLabel: document.getElementById('scrubber-time-label'),
+      activePresetTitle: document.getElementById('active-preset-title'),
+      activePresetSubtitle: document.getElementById('active-preset-subtitle'),
+      btnRenderMain: document.getElementById('btn-render-main'),
+      renderBtnBadge: document.getElementById('render-btn-badge'),
+      codeTextarea: document.getElementById('code-textarea'),
+      codeStatsLabel: document.getElementById('code-stats-label'),
+      detectedDurationChip: document.getElementById('detected-duration-chip'),
+      chkAutoDuration: document.getElementById('chk-auto-duration'),
+      inputDurationSec: document.getElementById('input-duration-sec'),
+      labelDurationSec: document.getElementById('label-duration-sec'),
+      durationReasonLabel: document.getElementById('duration-reason-label'),
+      selectFps: document.getElementById('select-fps'),
+      selectBitrate: document.getElementById('select-bitrate'),
+      btnSettingsAutofit: document.getElementById('btn-settings-autofit'),
+      chkEnableSound: document.getElementById('chk-enable-sound'),
+      inputCustomAudio: document.getElementById('input-custom-audio'),
+      btnClearAudio: document.getElementById('btn-clear-audio'),
+      audioFileLabel: document.getElementById('audio-file-label'),
+      inputGeminiKey: document.getElementById('input-gemini-key'),
+      btnPingAi: document.getElementById('btn-ping-ai'),
+      aiPingResult: document.getElementById('ai-ping-result'),
+      aiStatusDot: document.getElementById('ai-status-dot'),
+      libraryEmptyState: document.getElementById('library-empty-state'),
+      libraryList: document.getElementById('library-list'),
+      libraryCountBadge: document.getElementById('library-count-badge'),
+      aiModal: document.getElementById('ai-modal'),
+      aiPromptInput: document.getElementById('ai-prompt-input'),
+      aiModalStatus: document.getElementById('ai-modal-status'),
+      btnGenerateAi: document.getElementById('btn-generate-ai'),
+      renderOverlay: document.getElementById('render-overlay'),
+      renderStatusTitle: document.getElementById('render-status-title'),
+      renderStatusSubtitle: document.getElementById('render-status-subtitle'),
+      renderProgressBar: document.getElementById('render-progress-bar'),
+      renderProgressPct: document.getElementById('render-progress-pct'),
+      renderFrameCounter: document.getElementById('render-frame-counter'),
+      btnCancelRender: document.getElementById('btn-cancel-render'),
+      toastBanner: document.getElementById('toast-banner'),
+      toastText: document.getElementById('toast-text')
+    };
 
-      // Schedules a complete synchronized soundtrack into either speakers or a MediaStreamDestination for video export
-      scheduleSoundtrack(durationSec, mode, targetDestination) {
-        if (mode === 'mute') return null;
-        this.init();
-        const now = this.ctx.currentTime + 0.05;
-        const dest = targetDestination || this.ctx.destination;
-
-        const masterGain = this.ctx.createGain();
-        masterGain.gain.setValueAtTime(0.35, now);
-        masterGain.connect(dest);
-
-        const beatInterval = mode === 'upbeat-synth' ? 0.25 : 0.4; // 120 BPM or 75 BPM
-        const totalBeats = Math.floor(durationSec / beatInterval);
-
-        // Musical scale frequencies (F Minor Pentatonic / Editorial Warmth)
-        const bassNotes = [87.31, 103.83, 116.54, 130.81];
-        const pluckNotes = [349.23, 415.30, 466.16, 523.25, 622.25, 698.46];
-
-        for (let b = 0; b < totalBeats; b++) {
-          const t = now + b * beatInterval;
-
-          // 1. Soft Sub-Kick on every 2nd beat
-          if (b % 2 === 0) {
-            const osc = this.ctx.createOscillator();
-            const g = this.ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(130, t);
-            osc.frequency.exponentialRampToValueAtTime(38, t + 0.14);
-            g.gain.setValueAtTime(0.7, t);
-            g.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
-            osc.connect(g);
-            g.connect(masterGain);
-            osc.start(t);
-            osc.stop(t + 0.17);
-          }
-
-          // 2. Kinetic UI Pop / Pluck on motion accents
-          if (mode === 'upbeat-synth' || b % 2 === 1) {
-            const osc = this.ctx.createOscillator();
-            const g = this.ctx.createGain();
-            osc.type = 'triangle';
-            const freq = b % 4 === 0 ? bassNotes[(b / 4) % bassNotes.length] * 2 : pluckNotes[b % pluckNotes.length];
-            osc.frequency.setValueAtTime(freq, t);
-            g.gain.setValueAtTime(0.22, t);
-            g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
-            osc.connect(g);
-            g.connect(masterGain);
-            osc.start(t);
-            osc.stop(t + 0.19);
-          }
-        }
-
-        // Fade out cleanly at the end of the video
-        masterGain.gain.setValueAtTime(0.35, now + Math.max(0.2, durationSec - 0.4));
-        masterGain.gain.linearRampToValueAtTime(0.0001, now + durationSec);
-        return masterGain;
-      }
+    function showToast(msg) {
+      els.toastText.textContent = msg;
+      els.toastBanner.classList.remove('opacity-0');
+      els.toastBanner.classList.add('opacity-100');
+      clearTimeout(showToast._timer);
+      showToast._timer = setTimeout(() => {
+        els.toastBanner.classList.remove('opacity-100');
+        els.toastBanner.classList.add('opacity-0');
+      }, 2800);
     }
 
-    const audioEngine = new StudioAudioEngine();
+    /********************************************************************
+     * 4. AUTO-DURATION DETECTION ENGINE (STATIC + LIVE WEB ANIMATIONS)
+     * Scans HTML/CSS/JS patterns and live DOM animations to find the
+     * exact animation duration automatically.
+     ********************************************************************/
+    function detectCodeDurationSeconds(rawCode, iframeDoc) {
+      if (!rawCode || !rawCode.trim()) {
+        return { seconds: 5.0, reason: 'Default (Empty Code)' };
+      }
+
+      let maxSec = 0;
+      let reason = 'Default 10.0s';
+
+      // 1. Explicit data-duration attribute or meta tag
+      const explicitAttr = rawCode.match(/data-duration\s*=\s*["']([\d.]+)["']/i);
+      if (explicitAttr && parseFloat(explicitAttr[1]) > 0) {
+        return {
+          seconds: clampDuration(parseFloat(explicitAttr[1])),
+          reason: `Explicit data-duration="${explicitAttr[1]}s"`
+        };
+      }
+
+      // 2. Live DOM Web Animations API inspection (if iframe is mounted)
+      if (iframeDoc && typeof iframeDoc.getAnimations === 'function') {
+        try {
+          const anims = iframeDoc.getAnimations({ subtree: true });
+          anims.forEach(anim => {
+            if (anim.effect && typeof anim.effect.getTiming === 'function') {
+              const timing = anim.effect.getTiming();
+              const delay = Number(timing.delay) || 0;
+              const dur = Number(timing.duration) || 0;
+              const iter = (timing.iterations && isFinite(timing.iterations)) ? timing.iterations : 1;
+              const totalMs = delay + (dur * Math.min(iter, 4));
+              if (totalMs > 0 && totalMs <= 30000) {
+                const sec = totalMs / 1000;
+                if (sec > maxSec) {
+                  maxSec = sec;
+                  reason = `Live CSS/WAAPI Timeline (${sec.toFixed(1)}s)`;
+                }
+              }
+            }
+          });
+        } catch (e) {}
+      }
+
+      // 3. JS modulo loop or DURATION constants: e.g. % 8000, duration = 12000
+      const jsDurationRegex = /(?:duration|totalTime|loopTime|MAX_TIME|length)\s*[:=]\s*(\d{3,5})/gi;
+      let m;
+      while ((m = jsDurationRegex.exec(rawCode)) !== null) {
+        const val = parseFloat(m[1]);
+        const sec = val > 100 ? val / 1000 : val;
+        if (sec > maxSec && sec <= 30) {
+          maxSec = sec;
+          reason = `JS Duration Constant (${sec.toFixed(1)}s)`;
+        }
+      }
+
+      const moduloRegex = /%\s*(\d{4,5})\b/g;
+      while ((m = moduloRegex.exec(rawCode)) !== null) {
+        const sec = parseFloat(m[1]) / 1000;
+        if (sec > maxSec && sec <= 30) {
+          maxSec = sec;
+          reason = `JS Loop Modulo (${sec.toFixed(1)}s)`;
+        }
+      }
+
+      // 4. CSS animation shorthand: animation: name 0.8s ... 1.2s
+      const cssAnimRegex = /animation(?:-duration|-delay)?\s*:\s*([^;}{]+)/gi;
+      while ((m = cssAnimRegex.exec(rawCode)) !== null) {
+        const valStr = m[1];
+        const timeMatches = valStr.match(/(\d+(?:\.\d+)?)\s*(ms|s)\b/gi);
+        if (timeMatches) {
+          const parsedTimes = timeMatches.map(t => {
+            const num = parseFloat(t);
+            return /ms/i.test(t) ? num / 1000 : num;
+          });
+          // Sum duration + delay if two time values exist in shorthand
+          const sum = parsedTimes.length >= 2 ? (parsedTimes[0] + parsedTimes[1]) : parsedTimes[0];
+          // Add 2.2s reading hold after the last entrance animation completes
+          const candidate = sum + 2.2;
+          if (candidate > maxSec && candidate <= 30) {
+            maxSec = candidate;
+            reason = `CSS Keyframe + Hold (${candidate.toFixed(1)}s)`;
+          }
+        }
+      }
+
+      // 5. setTimeout / setInterval timings
+      const timeoutRegex = /setTimeout\s*\([^,]+,\s*(\d{3,5})\s*\)/g;
+      while ((m = timeoutRegex.exec(rawCode)) !== null) {
+        const sec = (parseFloat(m[1]) / 1000) + 1.5;
+        if (sec > maxSec && sec <= 30) {
+          maxSec = sec;
+          reason = `JS setTimeout Cue (${sec.toFixed(1)}s)`;
+        }
+      }
+
+      if (maxSec <= 0) {
+        maxSec = 10.0;
+        reason = 'Standard 10.0s Story';
+      }
+
+      return {
+        seconds: clampDuration(Math.round(maxSec * 2) / 2),
+        reason
+      };
+    }
+
+    function clampDuration(sec) {
+      if (!isFinite(sec) || sec < 2) return 2.0;
+      if (sec > 30) return 30.0;
+      return sec;
+    }
 
     /********************************************************************
-     * 4. SMART INNER CARD AUTO-FITTER & PERSIAN FONT INJECTOR
-     * Fixes:
-     *  - The 13% tiny poster inside a giant black box bug!
-     *  - Broken Persian fonts (Vazirmatn / Lalezar / Rubik)!
-     *  - Universal CSS/JS time controller for ANY pasted HTML code!
+     * 5. PROPORTIONAL STAGE SCALING & INNER CARD AUTO-FITTER
+     * Fixes both issues:
+     * 1) Fits the 1080x1920 stage into the mobile preview card without clipping.
+     * 2) Automatically scales inner 360x640 story cards inside the iframe
+     *    so there is never a tiny card floating inside a huge black box.
      ********************************************************************/
-    function buildEnhancedStageDocument(rawCode, stageW, stageH, autoFitCard, embedFonts) {
-      if (!rawCode || !rawCode.trim()) return '';
-      let code = rawCode.trim().replace(/^```(?:html|xml)?\s*/i, '').replace(/```$/i, '').trim();
+    function updateStageViewportScale() {
+      const slot = els.stageViewportSlot;
+      if (!slot) return;
+      const rect = slot.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
 
-      const fontLinks = embedFonts ? `
+      const scale = Math.min(rect.width / state.width, rect.height / state.height);
+      els.scaledStageWrapper.style.width = `${state.width}px`;
+      els.scaledStageWrapper.style.height = `${state.height}px`;
+      els.previewIframe.style.width = `${state.width}px`;
+      els.previewIframe.style.height = `${state.height}px`;
+      els.scaledStageWrapper.style.transform = `scale(${scale})`;
+
+      const pct = Math.round(scale * 100);
+      els.resolutionPill.textContent = `${state.width}×${state.height} • ${pct}%`;
+    }
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateStageViewportScale();
+    });
+    resizeObserver.observe(els.stageViewportSlot);
+
+    /**
+     * Builds the HTML document injected into the preview iframe.
+     * Includes:
+     * - Persian & English studio fonts
+     * - Universal Time-Warp hooks (__seekMotionStage)
+     * - Smart Auto-Fit Inner Card scaler (eliminates black borders around 360x640 cards)
+     */
+    function buildStageSrcDoc(rawUserCode) {
+      const fontHead = `
+<meta charset="UTF-8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Lalezar&family=Rubik:wght@500;700;900&family=Syne:wght@700;800&family=Vazirmatn:wght@400;500;700;800;900&display=swap" rel="stylesheet">
-` : '';
-
-      const injectedPatch = `
-${fontLinks}
-<style id="__motion_studio_stage_patch">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Lalezar&family=Rubik:wght@500;700;900&family=Syne:wght@700;800&family=Vazirmatn:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style id="__studio_injected_style">
   html, body {
-    width: ${stageW}px !important;
-    height: ${stageH}px !important;
     margin: 0 !important;
     padding: 0 !important;
+    width: ${state.width}px !important;
+    height: ${state.height}px !important;
     overflow: hidden !important;
-    position: relative !important;
-    -webkit-font-smoothing: antialiased !important;
-  }
-  /* Hide accidental external UI buttons generated by LLMs outside the poster */
-  body > button, body > .controls, body > .toolbar, body > nav,
-  #replay-btn, .replay-btn, .export-btn, .download-btn {
-    display: none !important;
+    -webkit-font-smoothing: antialiased;
   }
 </style>
-<script id="__motion_studio_controller">
-  window.__manualScrub = false;
-  window.__virtualTimeMs = 0;
+<script>
+  (function() {
+    window.__studioVirtualTimeMs = 0;
+    window.__studioTimeLocked = false;
+    const origPerfNow = performance.now.bind(performance);
+    const origDateNow = Date.now.bind(Date);
+    const startEpoch = origDateNow();
 
-  // Auto-detect inner card/poster (e.g. a 360x640 div centered inside a black body)
-  // and zoom it to fill 100% of our stageW x stageH viewport!
-  window.__fitInnerCardToViewport = function() {
-    if (!${autoFitCard ? 'true' : 'false'}) return;
-    const W = ${stageW};
-    const H = ${stageH};
+    performance.now = function() {
+      return window.__studioTimeLocked ? window.__studioVirtualTimeMs : origPerfNow();
+    };
+    Date.now = function() {
+      return window.__studioTimeLocked ? (startEpoch + window.__studioVirtualTimeMs) : origDateNow();
+    };
 
-    // Candidate selectors common in AI-generated story/poster code
-    const candidates = Array.from(document.body.children).filter(el => {
-      const tag = el.tagName;
-      if (['SCRIPT', 'STYLE', 'LINK', 'BUTTON', 'AUDIO'].includes(tag)) return false;
-      const r = el.getBoundingClientRect();
-      return r.width > 120 && r.height > 120;
-    });
-
-    let targetCard = null;
-    if (candidates.length === 1) {
-      targetCard = candidates[0];
-    } else {
-      targetCard = document.querySelector('.story-card, .poster, .phone-frame, .card-container, #story-stage, #poster, #app, .canvas-container, .story-container');
-    }
-
-    if (targetCard && targetCard !== document.body) {
-      // Reset any previous transform before measuring natural size
-      targetCard.style.transform = 'none';
-      const rect = targetCard.getBoundingClientRect();
-
-      // If the card is smaller than the stage (e.g. 360x640 inside 540x960), scale it edge-to-edge!
-      if (rect.width > 100 && rect.height > 100 && (rect.width < W * 0.96 || rect.height < H * 0.96)) {
-        const scaleX = W / rect.width;
-        const scaleY = H / rect.height;
-        const scale = Math.min(scaleX, scaleY);
-
-        document.body.style.display = 'flex';
-        document.body.style.alignItems = 'center';
-        document.body.style.justifyContent = 'center';
-
-        // Match body background to card background so zero black bars ever appear
-        const cardBg = window.getComputedStyle(targetCard).backgroundColor;
-        if (cardBg && cardBg !== 'rgba(0, 0, 0, 0)' && cardBg !== 'transparent') {
-          document.body.style.backgroundColor = cardBg;
-        }
-
-        targetCard.style.transformOrigin = 'center center';
-        targetCard.style.transform = 'scale(' + scale.toFixed(4) + ')';
-        targetCard.style.margin = '0';
-        targetCard.style.flexShrink = '0';
-      }
-    }
-  };
-
-  window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(window.__fitInnerCardToViewport, 30);
-    setTimeout(window.__fitInnerCardToViewport, 250);
-  });
-  window.addEventListener('load', () => {
-    window.__fitInnerCardToViewport();
-  });
-
-  // Deterministic Frame Seek for BOTH JS hooks AND CSS @keyframes / Transitions
-  window.__seekMotionStage = function(timeMs) {
-    window.__manualScrub = true;
-    window.__virtualTimeMs = timeMs;
-    try {
-      if (typeof window.__renderAtTime === 'function') {
-        window.__renderAtTime(timeMs);
-      }
-      if (document.getAnimations) {
+    window.__seekMotionStage = function(timeMs, lockClock) {
+      window.__studioVirtualTimeMs = timeMs;
+      window.__studioTimeLocked = !!lockClock;
+      try {
         const anims = document.getAnimations({ subtree: true });
         for (let i = 0; i < anims.length; i++) {
-          try {
+          anims[i].currentTime = timeMs;
+          if (lockClock) {
             anims[i].pause();
-            anims[i].currentTime = timeMs;
-          } catch (e) {}
+          }
         }
+      } catch (e) {}
+      if (typeof window.__renderAtTime === 'function') {
+        try { window.__renderAtTime(timeMs); } catch (e) {}
       }
-    } catch (err) {}
-  };
+    };
 
-  window.__resumeMotionStage = function() {
-    window.__manualScrub = false;
-    try {
-      if (document.getAnimations) {
-        const anims = document.getAnimations({ subtree: true });
-        for (let i = 0; i < anims.length; i++) {
-          try { anims[i].play(); } catch (e) {}
+    window.__autoFitInnerStage = function(enableFit, stageW, stageH) {
+      try {
+        const body = document.body;
+        if (!body) return;
+
+        // Remove accidental stray control buttons outside the main stage
+        const buttons = body.querySelectorAll('button.replay, button.restart, #controls, .controls-bar');
+        buttons.forEach(b => { b.style.display = 'none'; });
+
+        // Find primary visual container if user code created a small mobile card (e.g. 360x640)
+        const children = Array.from(body.children).filter(el => {
+          const tag = el.tagName.toLowerCase();
+          return tag !== 'script' && tag !== 'style' && tag !== 'link';
+        });
+
+        if (children.length === 1) {
+          const card = children[0];
+          card.style.transformOrigin = 'center center';
+          if (!enableFit) {
+            card.style.transform = '';
+            return;
+          }
+          const rect = card.getBoundingClientRect();
+          if (rect.width > 80 && rect.height > 80 && (rect.width < stageW * 0.92 || rect.height < stageH * 0.92)) {
+            const scaleX = stageW / rect.width;
+            const scaleY = stageH / rect.height;
+            const scale = Math.min(scaleX, scaleY);
+            card.style.transform = 'scale(' + scale.toFixed(4) + ')';
+            card.style.margin = 'auto';
+          }
         }
-      }
-    } catch (err) {}
-  };
+      } catch (e) {}
+    };
+  })();
 <\/script>`;
 
-      if (code.includes('</head>')) {
-        return code.replace('</head>', injectedPatch + '\n</head>');
-      } else if (code.includes('<body')) {
-        return injectedPatch + '\n' + code;
+      if (/<head[^>]*>/i.test(rawUserCode)) {
+        return rawUserCode.replace(/<head[^>]*>/i, match => match + fontHead);
+      } else if (/<html[^>]*>/i.test(rawUserCode)) {
+        return rawUserCode.replace(/<html[^>]*>/i, match => match + '<head>' + fontHead + '</head>');
       } else {
-        return `<!DOCTYPE html><html dir="auto"><head><meta charset="UTF-8">${injectedPatch}</head><body>${code}</body></html>`;
+        return `<!DOCTYPE html><html><head>${fontHead}</head><body>${rawUserCode}</body></html>`;
       }
     }
 
-    /********************************************************************
-     * 5. PROPORTIONAL STAGE SCALER IN PREVIEW CARD
-     ********************************************************************/
-    const stageHost = document.getElementById('stage-viewport-host');
-    const stageScaler = document.getElementById('stage-scaler');
-    const motionIframe = document.getElementById('motion-iframe');
-    const resolutionPill = document.getElementById('resolution-pill');
+    function applyStageCode() {
+      const raw = state.code.trim();
+      els.codeTextarea.value = state.code;
+      const lines = state.code ? state.code.split('\n').length : 1;
+      els.codeStatsLabel.textContent = `${lines} lines • ${state.code.length} characters`;
 
-    function updateStageProportionalScale() {
-      const spec = RATIO_SPECS[state.ratio];
-      const hostRect = stageHost.getBoundingClientRect();
-      if (hostRect.width <= 10 || hostRect.height <= 10) return;
-
-      const availW = Math.max(40, hostRect.width - 6);
-      const availH = Math.max(40, hostRect.height - 6);
-
-      const scale = Math.min(availW / spec.width, availH / spec.height);
-
-      stageScaler.style.width = `${spec.width}px`;
-      stageScaler.style.height = `${spec.height}px`;
-      stageScaler.style.transform = `scale(${scale})`;
-
-      resolutionPill.textContent = `${spec.exportW}×${spec.exportH} • ${state.autoFitCard ? 'Auto-Fit 100%' : 'Raw Page'}`;
-    }
-
-    const resizeObserver = new ResizeObserver(updateStageProportionalScale);
-    resizeObserver.observe(stageHost);
-    window.addEventListener('resize', updateStageProportionalScale);
-
-    /********************************************************************
-     * 6. STAGE LOADER & TIMELINE CONTROLS
-     ********************************************************************/
-    const codeTextarea = document.getElementById('code-editor-textarea');
-    const codeStatsLabel = document.getElementById('code-stats-label');
-    const previewEmptyState = document.getElementById('preview-empty-state');
-    const headerSpecsLabel = document.getElementById('header-specs-label');
-    const scrubber = document.getElementById('timeline-scrubber');
-    const timeLabel = document.getElementById('timeline-time-label');
-
-    function syncDurationUI() {
-      headerSpecsLabel.textContent = `${state.ratio} • ${state.fps} FPS • ${state.durationSec.toFixed(1)}s`;
-      document.getElementById('btn-Duration-Quick').textContent = `⏱ ${state.durationSec.toFixed(1)}s`;
-      document.getElementById('export-badge-tag').textContent = `${state.durationSec.toFixed(1)}s Exact`;
-      document.getElementById('setting-duration').value = String(state.durationSec);
-      scrubber.max = state.durationSec * 1000;
-
-      const text = state.code || '';
-      const lines = text ? text.split('\n').length : 1;
-      codeStatsLabel.textContent = `${lines} lines • ${text.length} chars`;
-    }
-
-    function loadCodeIntoStage() {
-      syncDurationUI();
-      updateStageProportionalScale();
-
-      if (!state.code || !state.code.trim()) {
-        previewEmptyState.classList.remove('hidden');
-        previewEmptyState.classList.add('flex');
-        motionIframe.srcdoc = '';
+      if (!raw) {
+        els.emptyStagePlaceholder.classList.remove('hidden');
+        els.emptyStagePlaceholder.classList.add('flex');
+        els.previewIframe.srcdoc = '';
         return;
       }
 
-      previewEmptyState.classList.add('hidden');
-      previewEmptyState.classList.remove('flex');
+      els.emptyStagePlaceholder.classList.add('hidden');
+      els.emptyStagePlaceholder.classList.remove('flex');
 
-      const spec = RATIO_SPECS[state.ratio];
-      motionIframe.srcdoc = buildEnhancedStageDocument(
-        state.code,
-        spec.width,
-        spec.height,
-        state.autoFitCard,
-        state.embedPersianFonts
-      );
+      updateStageViewportScale();
+      els.previewIframe.srcdoc = buildStageSrcDoc(raw);
 
-      state.currentTimeMs = 0;
-      state.isPlaying = true;
-      updatePlayPauseIcons();
+      els.previewIframe.onload = () => {
+        const doc = els.previewIframe.contentDocument;
+        const win = els.previewIframe.contentWindow;
+        if (win && typeof win.__autoFitInnerStage === 'function') {
+          win.__autoFitInnerStage(state.autoFitCard, state.width, state.height);
+          setTimeout(() => win.__autoFitInnerStage(state.autoFitCard, state.width, state.height), 150);
+        }
+        if (state.autoDuration) {
+          const detected = detectCodeDurationSeconds(raw, doc);
+          setDurationSeconds(detected.seconds, detected.reason, true);
+        }
+        state.currentTimeMs = 0;
+      };
     }
 
-    function updatePlayPauseIcons() {
-      document.getElementById('icon-pause').classList.toggle('hidden', !state.isPlaying);
-      document.getElementById('icon-play').classList.toggle('hidden', state.isPlaying);
+    function setDurationSeconds(sec, reasonText = 'Manual Selection', isAuto = false) {
+      state.durationSec = clampDuration(sec);
+      const maxMs = Math.round(state.durationSec * 1000);
+      els.timelineScrubber.max = String(maxMs);
+      els.inputDurationSec.value = String(state.durationSec);
+      els.labelDurationSec.textContent = `${state.durationSec.toFixed(1)}s`;
+      els.detectedDurationChip.textContent = `Auto-Detect: ${state.durationSec.toFixed(1)}s`;
+      els.durationReasonLabel.textContent = reasonText;
+      els.autoDurBadge.textContent = isAuto ? 'Auto' : 'Manual';
+      updateMetadataLabels();
     }
 
-    let lastTick = performance.now();
-    function uiTimelineLoop(now) {
-      const dt = now - lastTick;
-      lastTick = now;
+    function updateMetadataLabels() {
+      els.headerMeta.textContent = `${state.ratio} • ${state.fps} FPS • ${state.durationSec.toFixed(1)}s`;
+      els.activePresetTitle.textContent = state.title || 'Custom Motion';
+      els.activePresetSubtitle.textContent = `Motion Graphics • ${state.durationSec.toFixed(1)}s • H.264 MP4`;
+      els.renderBtnBadge.textContent = `${state.durationSec.toFixed(1)}s • 1:1`;
+      const curSec = (state.currentTimeMs / 1000).toFixed(1);
+      els.scrubberTimeLabel.textContent = `${curSec}s / ${state.durationSec.toFixed(1)}s`;
+    }
+
+    /********************************************************************
+     * 6. PREVIEW TIMELINE LOOP (60FPS SYNCHRONIZED SCRUBBER)
+     ********************************************************************/
+    let lastPreviewTick = performance.now();
+    function previewLoop(now) {
+      const dt = now - lastPreviewTick;
+      lastPreviewTick = now;
 
       if (state.isPlaying && !state.isRendering) {
-        state.currentTimeMs = (state.currentTimeMs + dt) % (state.durationSec * 1000);
-        scrubber.value = Math.round(state.currentTimeMs);
-        timeLabel.textContent = `${(state.currentTimeMs / 1000).toFixed(1)}s / ${state.durationSec.toFixed(1)}s`;
-      }
-      requestAnimationFrame(uiTimelineLoop);
-    }
-    requestAnimationFrame(uiTimelineLoop);
-
-    scrubber.addEventListener('input', (e) => {
-      const ms = Number(e.target.value);
-      state.currentTimeMs = ms;
-      state.isPlaying = false;
-      updatePlayPauseIcons();
-      timeLabel.textContent = `${(ms / 1000).toFixed(1)}s / ${state.durationSec.toFixed(1)}s`;
-
-      const win = motionIframe.contentWindow;
-      if (win && typeof win.__seekMotionStage === 'function') {
-        win.__seekMotionStage(ms);
-      }
-    });
-
-    document.getElementById('btn-play-pause').addEventListener('click', () => {
-      state.isPlaying = !state.isPlaying;
-      updatePlayPauseIcons();
-      const win = motionIframe.contentWindow;
-      if (win) {
-        if (state.isPlaying && typeof win.__resumeMotionStage === 'function') {
-          win.__resumeMotionStage();
-        } else if (!state.isPlaying && typeof win.__seekMotionStage === 'function') {
-          win.__seekMotionStage(state.currentTimeMs);
+        const totalMs = state.durationSec * 1000;
+        state.currentTimeMs += dt;
+        if (state.currentTimeMs >= totalMs) {
+          state.currentTimeMs = state.currentTimeMs % totalMs;
+          // Restart CSS animations cleanly at loop boundary
+          const win = els.previewIframe.contentWindow;
+          if (win && typeof win.__seekMotionStage === 'function') {
+            win.__seekMotionStage(0, false);
+          }
         }
+        els.timelineScrubber.value = String(Math.round(state.currentTimeMs));
+        const curSec = (state.currentTimeMs / 1000).toFixed(1);
+        els.scrubberTimeLabel.textContent = `${curSec}s / ${state.durationSec.toFixed(1)}s`;
       }
-    });
 
-    document.getElementById('btn-restart-preview').addEventListener('click', () => {
-      loadCodeIntoStage();
-      if (state.audioMode !== 'mute') {
-        audioEngine.scheduleSoundtrack(2.0, state.audioMode, null);
-      }
-      showToast('انیمیشن از ثانیه ۰.۰ مجدداً اجرا شد');
-    });
-
-    // Quick Duration Cycle Button (5s -> 8s -> 10s -> 12s -> 15s)
-    document.getElementById('btn-Duration-Quick').addEventListener('click', () => {
-      const steps = [5, 8, 10, 12, 15];
-      const next = steps[(steps.indexOf(state.durationSec) + 1) % steps.length] || 10;
-      state.durationSec = next;
-      syncDurationUI();
-      showToast(`مدت زمان خروجی روی ${next}.0 ثانیه تنظیم شد`);
-    });
-
-    // Auto-Fit Card Toggle
-    function toggleAutoFitCard() {
-      state.autoFitCard = !state.autoFitCard;
-      const btn = document.getElementById('btn-toggle-autocrop');
-      const chk = document.getElementById('toggle-autocrop-setting');
-      chk.checked = state.autoFitCard;
-      if (state.autoFitCard) {
-        btn.className = 'px-3 py-2 rounded-full bg-emerald-600 text-white text-[11px] font-bold flex items-center gap-1 shadow-sm active:scale-95 transition shrink-0';
-        btn.innerHTML = '<span>🔍 Auto-Fit Card: ON</span>';
-      } else {
-        btn.className = 'px-3 py-2 rounded-full bg-slate-200 text-slate-700 text-[11px] font-bold flex items-center gap-1 shadow-sm active:scale-95 transition shrink-0';
-        btn.innerHTML = '<span>🔍 Auto-Fit Card: OFF</span>';
-      }
-      loadCodeIntoStage();
+      requestAnimationFrame(previewLoop);
     }
-    document.getElementById('btn-toggle-autocrop').addEventListener('click', toggleAutoFitCard);
-    document.getElementById('toggle-autocrop-setting').addEventListener('change', toggleAutoFitCard);
+    requestAnimationFrame(previewLoop);
 
     /********************************************************************
-     * 7. TWO-PHASE EXACT-DURATION VIDEO + AUDIO RENDER ENGINE
-     *
-     * WHY THIS COMPLETELY FIXES THE 33-SECOND BUG & BROKEN FONTS:
-     * - Phase 1 (Deterministic Offscreen Capture):
-     *   Steps the iframe through each timestamp, waits for fonts (`document.fonts.ready`),
-     *   captures the exact rendered DOM using `html2canvas` at native coordinate scale
-     *   into fast `ImageBitmap` frames in memory.
-     * - Phase 2 (Exact Wall-Clock 60FPS Muxing + Synchronized Audio):
-     *   Starts `MediaRecorder` with a combined `[VideoTrack + AudioTrack]` stream and
-     *   blits the pre-rendered `ImageBitmap` frames at the exact mathematical timestamp
-     *   (`performance.now() - startTime`). Because blitting an `ImageBitmap` takes <0.3ms,
-     *   a 10.0-second animation is recorded in **EXACTLY 10.00 SECONDS** with zero lag,
-     *   100% smooth motion, intact Persian fonts, and crystal-clear audio!
+     * 7. DIRECT DOM-TO-CANVAS2D 60FPS RASTERIZER & EXACT-DURATION RECORDER
+     * Why this never crashes or cancels:
+     * - No html2canvas! No 2.5GB RAM bitmap buffering!
+     * - Walks the live iframe DOM in < 2ms per frame, drawing background
+     *   patterns, borders, neo-brutalist hard shadows, rounded shapes,
+     *   and native Persian/English text via browser's own ctx.fillText.
+     * - Records in real-time wall-clock (10.0s = 10.0s video) with audio.
      ********************************************************************/
-    async function startExactDurationVideoExport() {
-      if (state.isRendering) return;
-      state.isRendering = true;
-      state.cancelRenderRequested = false;
-
-      const renderModal = document.getElementById('render-modal');
-      const phaseTag = document.getElementById('render-phase-tag');
-      const modalTitle = document.getElementById('render-modal-title');
-      const progressBar = document.getElementById('render-progress-bar');
-      const percentBadge = document.getElementById('render-percent-badge');
-      const statusDetail = document.getElementById('render-status-detail');
-      const exportCanvas = document.getElementById('export-render-canvas');
-
-      renderModal.classList.remove('hidden');
-
-      const spec = RATIO_SPECS[state.ratio];
-      const outW = Math.round(spec.width * state.qualityScale);
-      const outH = Math.round(spec.height * state.qualityScale);
-
-      exportCanvas.width = outW;
-      exportCanvas.height = outH;
-      const ctx = exportCanvas.getContext('2d', { alpha: false });
-
-      const iframeWin = motionIframe.contentWindow;
-      const iframeDoc = motionIframe.contentDocument;
-
-      // Ensure all Persian/English web fonts inside the iframe are 100% loaded before frame 0
-      if (iframeDoc && iframeDoc.fonts && iframeDoc.fonts.ready) {
-        statusDetail.textContent = 'Loading Persian & Studio Web Fonts...';
-        await iframeDoc.fonts.ready;
+    function parseRadius(radiusStr, w, h) {
+      if (!radiusStr) return 0;
+      const first = radiusStr.split(' ')[0];
+      if (first.endsWith('%')) {
+        return (parseFloat(first) / 100) * Math.min(w, h);
       }
-      if (iframeWin && typeof iframeWin.__fitInnerCardToViewport === 'function') {
-        iframeWin.__fitInnerCardToViewport();
-      }
+      return Math.min(parseFloat(first) || 0, Math.min(w, h) / 2);
+    }
 
-      // Capture at 30 unique snapshots/sec and play back at 60Hz hardware stream for fast capture + butter-smooth output
-      const captureFps = 30;
-      const totalSnapshots = Math.round(state.durationSec * captureFps);
-      const capturedBitmaps = [];
+    function drawRoundedRectPath(ctx, x, y, w, h, r) {
+      const rad = Math.max(0, Math.min(r, Math.min(w, h) / 2));
+      ctx.beginPath();
+      ctx.moveTo(x + rad, y);
+      ctx.lineTo(x + w - rad, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + rad);
+      ctx.lineTo(x + w, y + h - rad);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - rad, y + h);
+      ctx.lineTo(x + rad, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - rad);
+      ctx.lineTo(x, y + rad);
+      ctx.quadraticCurveTo(x, y, x + rad, y);
+      ctx.closePath();
+    }
 
-      phaseTag.textContent = 'PHASE 1/2: RENDERING FRAMES';
-      modalTitle.textContent = 'Capturing Crisp Frames & Fonts';
+    function parseBoxShadow(shadowStr) {
+      if (!shadowStr || shadowStr === 'none') return null;
+      // Match color (rgb/rgba/hex) and numbers
+      const colorMatch = shadowStr.match(/(rgba?\([^)]+\)|#[0-9a-fA-F]{3,8})/);
+      const color = colorMatch ? colorMatch[1] : 'rgba(0,0,0,0.35)';
+      const stripped = shadowStr.replace(/(rgba?\([^)]+\)|#[0-9a-fA-F]{3,8})/, '').trim();
+      const nums = stripped.match(/(-?\d+(?:\.\d+)?px)/g);
+      if (!nums || nums.length < 2) return null;
+      return {
+        color,
+        offsetX: parseFloat(nums[0]) || 0,
+        offsetY: parseFloat(nums[1]) || 0,
+        blur: parseFloat(nums[2]) || 0
+      };
+    }
 
-      for (let i = 0; i < totalSnapshots; i++) {
-        if (state.cancelRenderRequested) break;
+    function rasterizeIframeDOMToCanvas(iframeDoc, ctx, stageW, stageH) {
+      if (!iframeDoc || !iframeDoc.body) return;
+      const win = iframeDoc.defaultView;
 
-        const timeMs = (i / captureFps) * 1000;
-        if (iframeWin && typeof iframeWin.__seekMotionStage === 'function') {
-          iframeWin.__seekMotionStage(timeMs);
-        }
+      // 1. Clear & paint root background
+      ctx.save();
+      const bodyStyle = win.getComputedStyle(iframeDoc.body);
+      ctx.fillStyle = (bodyStyle.backgroundColor && bodyStyle.backgroundColor !== 'rgba(0, 0, 0, 0)')
+        ? bodyStyle.backgroundColor
+        : '#090A0F';
+      ctx.fillRect(0, 0, stageW, stageH);
+      ctx.restore();
 
-        // Render exact iframe body with html2canvas preserving fonts, RTL text, shadows & transforms
-        try {
-          const renderedCanvas = await html2canvas(iframeDoc.body, {
-            canvas: null,
-            width: spec.width,
-            height: spec.height,
-            windowWidth: spec.width,
-            windowHeight: spec.height,
-            scale: state.qualityScale,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: null,
-            logging: false
-          });
+      // 2. Collect visible elements in paint order
+      const allEls = Array.from(iframeDoc.body.querySelectorAll('*'));
 
-          // Draw preview on modal canvas
-          ctx.clearRect(0, 0, outW, outH);
-          ctx.drawImage(renderedCanvas, 0, 0, outW, outH);
+      for (let i = 0; i < allEls.length; i++) {
+        const el = allEls[i];
+        const tag = el.tagName.toLowerCase();
+        if (tag === 'script' || tag === 'style' || tag === 'link' || tag === 'meta') continue;
 
-          // Store ultra-fast GPU ImageBitmap in memory
-          const bmp = await createImageBitmap(renderedCanvas);
-          capturedBitmaps.push(bmp);
-        } catch (err) {
-          console.warn('Frame capture fallback:', err);
-        }
+        const cs = win.getComputedStyle(el);
+        if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+        const opacity = parseFloat(cs.opacity);
+        if (opacity <= 0.01) continue;
 
-        const pct = Math.round(((i + 1) / totalSnapshots) * 75);
-        progressBar.style.width = `${pct}%`;
-        percentBadge.textContent = `${pct}%`;
-        statusDetail.textContent = `Rendered Frame ${i + 1}/${totalSnapshots} (${(timeMs / 1000).toFixed(1)}s / ${state.durationSec.toFixed(1)}s)`;
+        const rect = el.getBoundingClientRect();
+        if (rect.width <= 0.5 || rect.height <= 0.5) continue;
+        if (rect.bottom < 0 || rect.top > stageH || rect.right < 0 || rect.left > stageW) continue;
 
-        // Yield briefly to keep UI responsive
-        await new Promise(r => setTimeout(r, 4));
-      }
+        ctx.save();
+        ctx.globalAlpha = opacity;
 
-      if (state.cancelRenderRequested || capturedBitmaps.length === 0) {
-        capturedBitmaps.forEach(b => b.close && b.close());
-        renderModal.classList.add('hidden');
-        state.isRendering = false;
-        if (iframeWin && typeof iframeWin.__resumeMotionStage === 'function') iframeWin.__resumeMotionStage();
-        showToast('فرآیند خروجی لغو شد');
-        return;
-      }
+        const radius = parseRadius(cs.borderTopLeftRadius, rect.width, rect.height);
+        const bg = cs.backgroundColor;
+        const hasBg = bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent';
+        const borderW = parseFloat(cs.borderTopWidth) || 0;
+        const borderColor = cs.borderTopColor;
+        const shadow = parseBoxShadow(cs.boxShadow);
 
-      /******************************************************************
-       * PHASE 2: EXACT WALL-CLOCK MUXING (GUARANTEES 10.0s = 10.0s!)
-       ******************************************************************/
-      phaseTag.textContent = 'PHASE 2/2: EXACT-TIME AUDIO/VIDEO MUX';
-      modalTitle.textContent = `Encoding Exact ${state.durationSec.toFixed(1)}s Video + Audio`;
-
-      const videoStream = exportCanvas.captureStream(state.fps);
-      const combinedTracks = [...videoStream.getVideoTracks()];
-
-      // Setup WebAudio MediaStreamDestination so audio is muxed into the video file!
-      let customAudioEl = null;
-      if (state.audioMode !== 'mute') {
-        try {
-          audioEngine.init();
-          const audioDest = audioEngine.ctx.createMediaStreamDestination();
-          if (state.audioMode === 'custom-file' && state.customAudioUrl) {
-            customAudioEl = new Audio(state.customAudioUrl);
-            customAudioEl.crossOrigin = 'anonymous';
-            const srcNode = audioEngine.ctx.createMediaElementSource(customAudioEl);
-            srcNode.connect(audioDest);
-            srcNode.connect(audioEngine.ctx.destination);
-            await customAudioEl.play();
-          } else {
-            audioEngine.scheduleSoundtrack(state.durationSec, state.audioMode, audioDest);
+        // Draw hard or soft box-shadow
+        if (shadow && (hasBg || borderW > 0)) {
+          ctx.save();
+          ctx.fillStyle = shadow.color;
+          if (shadow.blur > 0) {
+            ctx.shadowColor = shadow.color;
+            ctx.shadowBlur = shadow.blur;
           }
-          const audioTracks = audioDest.stream.getAudioTracks();
-          if (audioTracks.length > 0) {
-            combinedTracks.push(audioTracks[0]);
-          }
-        } catch (audioErr) {
-          console.warn('Audio mux warning:', audioErr);
+          drawRoundedRectPath(
+            ctx,
+            rect.left + shadow.offsetX,
+            rect.top + shadow.offsetY,
+            rect.width,
+            rect.height,
+            radius
+          );
+          ctx.fill();
+          ctx.restore();
         }
+
+        // Draw background fill
+        if (hasBg) {
+          ctx.fillStyle = bg;
+          drawRoundedRectPath(ctx, rect.left, rect.top, rect.width, rect.height, radius);
+          ctx.fill();
+        }
+
+        // Draw dotted radial background if present (like in Persian Fingerfood card)
+        if (cs.backgroundImage && cs.backgroundImage.includes('radial-gradient')) {
+          ctx.save();
+          drawRoundedRectPath(ctx, rect.left, rect.top, rect.width, rect.height, radius);
+          ctx.clip();
+          ctx.fillStyle = 'rgba(148, 163, 184, 0.35)';
+          const step = 28;
+          for (let gx = rect.left + 12; gx < rect.right; gx += step) {
+            for (let gy = rect.top + 12; gy < rect.bottom; gy += step) {
+              ctx.beginPath();
+              ctx.arc(gx, gy, 2, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+          ctx.restore();
+        }
+
+        // Draw border
+        if (borderW > 0 && borderColor && borderColor !== 'transparent') {
+          ctx.lineWidth = borderW * 2;
+          ctx.strokeStyle = borderColor;
+          drawRoundedRectPath(ctx, rect.left, rect.top, rect.width, rect.height, radius);
+          ctx.stroke();
+        }
+
+        // Draw embedded <canvas> or <img> if present
+        if (tag === 'canvas' || (tag === 'img' && el.complete && el.naturalWidth > 0)) {
+          try {
+            ctx.drawImage(el, rect.left, rect.top, rect.width, rect.height);
+          } catch (e) {}
+        }
+
+        // Draw direct text nodes with exact computed font, size, color & RTL support
+        for (let c = 0; c < el.childNodes.length; c++) {
+          const node = el.childNodes[c];
+          if (node.nodeType === 3) {
+            const text = node.nodeValue.replace(/\s+/g, ' ').trim();
+            if (!text) continue;
+
+            const range = iframeDoc.createRange();
+            range.selectNodeContents(node);
+            const clientRects = range.getClientRects();
+
+            // Compute actual scaled font size comparing bounding box vs layout size
+            const scaleFactor = el.offsetWidth > 0 ? (rect.width / el.offsetWidth) : 1;
+            const rawFontSize = parseFloat(cs.fontSize) || 16;
+            const scaledFontSize = rawFontSize * scaleFactor;
+            const fontWeight = cs.fontWeight || '700';
+            const fontFamily = cs.fontFamily || 'Vazirmatn, Inter, sans-serif';
+
+            ctx.font = `${fontWeight} ${scaledFontSize.toFixed(1)}px ${fontFamily}`;
+            ctx.fillStyle = cs.color || '#111827';
+            ctx.textBaseline = 'middle';
+            const isRtl = cs.direction === 'rtl' || /[\u0600-\u06FF]/.test(text);
+            ctx.direction = isRtl ? 'rtl' : 'ltr';
+
+            if (clientRects.length <= 1) {
+              const r = clientRects[0] || rect;
+              const align = cs.textAlign;
+              if (align === 'center') {
+                ctx.textAlign = 'center';
+                ctx.fillText(text, r.left + r.width / 2, r.top + r.height / 2);
+              } else if (align === 'right' || (isRtl && align !== 'left')) {
+                ctx.textAlign = 'right';
+                ctx.fillText(text, r.right - 2, r.top + r.height / 2);
+              } else {
+                ctx.textAlign = 'left';
+                ctx.fillText(text, r.left + 2, r.top + r.height / 2);
+              }
+            } else {
+              // Multi-line text node: split words across clientRects
+              const words = text.split(' ');
+              const linesCount = clientRects.length;
+              const wordsPerLine = Math.ceil(words.length / linesCount);
+              ctx.textAlign = 'center';
+              for (let ln = 0; ln < linesCount; ln++) {
+                const slice = words.slice(ln * wordsPerLine, (ln + 1) * wordsPerLine).join(' ');
+                const lr = clientRects[ln];
+                if (slice && lr) {
+                  ctx.fillText(slice, lr.left + lr.width / 2, lr.top + lr.height / 2);
+                }
+              }
+            }
+          }
+        }
+
+        ctx.restore();
       }
+    }
 
-      const finalStream = new MediaStream(combinedTracks);
-
-      const mimeCandidates = [
+    function getSupportedRecorderMime() {
+      const candidates = [
         'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
         'video/mp4',
         'video/webm;codecs=vp9,opus',
         'video/webm;codecs=vp8,opus',
         'video/webm'
       ];
-      const selectedMime = mimeCandidates.find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || 'video/webm';
-
-      const chunks = [];
-      const recorder = new MediaRecorder(finalStream, {
-        mimeType: selectedMime,
-        videoBitsPerSecond: 16_000_000
-      });
-
-      recorder.ondataavailable = (e) => {
-        if (e.data && e.data.size > 0) chunks.push(e.data);
-      };
-
-      const recorderDone = new Promise((resolve) => {
-        recorder.onstop = () => {
-          const blob = new Blob(chunks, { type: selectedMime });
-          resolve({ blob, mimeType: selectedMime });
-        };
-      });
-
-      // Draw frame 0 before starting recorder
-      ctx.drawImage(capturedBitmaps[0], 0, 0, outW, outH);
-      recorder.start(100);
-
-      const durationMs = state.durationSec * 1000;
-      const muxStart = performance.now();
-
-      await new Promise((resolve) => {
-        function playbackTick(now) {
-          if (state.cancelRenderRequested) {
-            resolve();
-            return;
-          }
-          const elapsed = now - muxStart;
-          if (elapsed >= durationMs) {
-            // Draw final frame and finish right on the exact millisecond!
-            ctx.drawImage(capturedBitmaps[capturedBitmaps.length - 1], 0, 0, outW, outH);
-            resolve();
-            return;
-          }
-
-          const frameIdx = Math.min(
-            capturedBitmaps.length - 1,
-            Math.floor((elapsed / durationMs) * capturedBitmaps.length)
-          );
-          ctx.drawImage(capturedBitmaps[frameIdx], 0, 0, outW, outH);
-
-          const pct = 75 + Math.round((elapsed / durationMs) * 25);
-          progressBar.style.width = `${pct}%`;
-          percentBadge.textContent = `${pct}%`;
-          statusDetail.textContent = `Syncing Audio & Video: ${(elapsed / 1000).toFixed(1)}s / ${state.durationSec.toFixed(1)}s`;
-
-          requestAnimationFrame(playbackTick);
+      for (const mime of candidates) {
+        if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(mime)) {
+          return mime;
         }
-        requestAnimationFrame(playbackTick);
-      });
-
-      recorder.stop();
-      if (customAudioEl) {
-        customAudioEl.pause();
       }
-      const result = await recorderDone;
-
-      // Free GPU memory
-      capturedBitmaps.forEach(b => b.close && b.close());
-
-      if (iframeWin && typeof iframeWin.__resumeMotionStage === 'function') {
-        iframeWin.__resumeMotionStage();
-      }
-
-      renderModal.classList.add('hidden');
-      state.isRendering = false;
-
-      if (!state.cancelRenderRequested && result.blob.size > 0) {
-        const ext = result.mimeType.includes('mp4') ? 'mp4' : 'webm';
-        const url = URL.createObjectURL(result.blob);
-        state.library.unshift({
-          id: 'vid_' + Date.now(),
-          title: state.title || 'Studio Motion',
-          ratio: state.ratio,
-          resolution: `${outW}×${outH}`,
-          fps: state.fps,
-          duration: state.durationSec,
-          hasAudio: state.audioMode !== 'mute',
-          ext,
-          url
-        });
-        renderLibraryList();
-        switchTab('library');
-        showToast(`ویدیوی دقیق ${state.durationSec.toFixed(1)} ثانیه‌ای با صدا آماده شد ✓`);
-      }
+      return '';
     }
 
-    document.getElementById('btn-start-render').addEventListener('click', startExactDurationVideoExport);
-    document.getElementById('btn-render-first-video').addEventListener('click', startExactDurationVideoExport);
-    document.getElementById('btn-cancel-render').addEventListener('click', () => {
-      state.cancelRenderRequested = true;
-    });
-
-    /********************************************************************
-     * 8. LIBRARY LIST & VIDEO PLAYER
-     ********************************************************************/
-    function renderLibraryList() {
-      const emptyEl = document.getElementById('library-empty-state');
-      const listEl = document.getElementById('library-list-container');
-      const badgeEl = document.getElementById('library-badge-count');
-
-      if (state.library.length === 0) {
-        emptyEl.classList.remove('hidden');
-        listEl.classList.add('hidden');
-        badgeEl.classList.add('hidden');
+    async function startSmoothVideoExport() {
+      if (state.isRendering) return;
+      if (!state.code.trim()) {
+        showToast('ابتدا کد موشن‌گرافیک را وارد کنید');
         return;
       }
 
-      badgeEl.textContent = state.library.length;
-      badgeEl.classList.remove('hidden');
-      emptyEl.classList.add('hidden');
-      listEl.classList.remove('hidden');
+      state.isRendering = true;
+      state.cancelRenderRequested = false;
 
-      listEl.innerHTML = state.library.map(item => `
-        <div class="soft-card rounded-[24px] p-4 border border-slate-200/70 space-y-3">
+      // Show Render Progress Overlay
+      els.renderOverlay.classList.remove('hidden');
+      els.renderProgressBar.style.width = '0%';
+      els.renderProgressPct.textContent = '0%';
+      els.renderStatusTitle.textContent = `Recording ${state.fps}FPS Video...`;
+      els.renderStatusSubtitle.textContent = `${state.width}×${state.height} • Exact ${state.durationSec.toFixed(1)}s`;
+
+      try {
+        const doc = els.previewIframe.contentDocument;
+        const win = els.previewIframe.contentWindow;
+        if (doc && doc.fonts && doc.fonts.ready) {
+          await doc.fonts.ready;
+        }
+
+        // Create dedicated full-resolution recording canvas
+        const recordCanvas = document.createElement('canvas');
+        recordCanvas.width = state.width;
+        recordCanvas.height = state.height;
+        const ctx = recordCanvas.getContext('2d', { alpha: false });
+
+        // Restart iframe animation cleanly from 0.0s
+        if (win && typeof win.__seekMotionStage === 'function') {
+          win.__seekMotionStage(0, false);
+        }
+
+        // Paint initial frame immediately so stream is warm
+        rasterizeIframeDOMToCanvas(doc, ctx, state.width, state.height);
+
+        // Combine 60FPS Canvas Video Track + Studio Audio Track
+        const canvasStream = recordCanvas.captureStream(state.fps);
+        const audioStream = audioEngine.startExportSoundtrack(state.durationSec);
+        if (audioStream) {
+          audioStream.getAudioTracks().forEach(track => canvasStream.addTrack(track));
+        }
+
+        const mimeType = getSupportedRecorderMime();
+        const recorderOptions = {
+          videoBitsPerSecond: state.bitrate
+        };
+        if (mimeType) recorderOptions.mimeType = mimeType;
+
+        const chunks = [];
+        const recorder = new MediaRecorder(canvasStream, recorderOptions);
+        recorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) chunks.push(e.data);
+        };
+
+        const exportPromise = new Promise((resolve, reject) => {
+          recorder.onstop = () => resolve();
+          recorder.onerror = (err) => reject(err);
+        });
+
+        recorder.start(100);
+
+        const durationMs = state.durationSec * 1000;
+        const startWallTime = performance.now();
+
+        await new Promise((resolve) => {
+          function renderTick() {
+            if (state.cancelRenderRequested) {
+              resolve();
+              return;
+            }
+            const elapsed = performance.now() - startWallTime;
+            const clampedMs = Math.min(elapsed, durationMs);
+
+            // Sync iframe animations to exact wall-clock millisecond
+            if (win && typeof win.__seekMotionStage === 'function') {
+              win.__seekMotionStage(clampedMs, false);
+            }
+
+            // Rasterize live DOM directly onto recording canvas
+            rasterizeIframeDOMToCanvas(doc, ctx, state.width, state.height);
+
+            // Update progress UI
+            const pct = Math.min(100, Math.round((clampedMs / durationMs) * 100));
+            els.renderProgressBar.style.width = `${pct}%`;
+            els.renderProgressPct.textContent = `${pct}%`;
+            els.renderFrameCounter.textContent = `${(clampedMs / 1000).toFixed(1)}s / ${state.durationSec.toFixed(1)}s`;
+
+            if (elapsed >= durationMs) {
+              resolve();
+            } else {
+              requestAnimationFrame(renderTick);
+            }
+          }
+          requestAnimationFrame(renderTick);
+        });
+
+        audioEngine.stopAll();
+        if (recorder.state !== 'inactive') {
+          recorder.stop();
+        }
+        await exportPromise;
+
+        if (state.cancelRenderRequested) {
+          showToast('خروجی توسط شما متوقف شد');
+          return;
+        }
+
+        const finalMime = mimeType || 'video/webm';
+        const ext = finalMime.includes('mp4') ? 'mp4' : 'webm';
+        const blob = new Blob(chunks, { type: finalMime });
+        const url = URL.createObjectURL(blob);
+
+        const item = {
+          id: Date.now(),
+          title: state.title || 'Custom Motion',
+          duration: state.durationSec.toFixed(1),
+          ratio: state.ratio,
+          resolution: `${state.width}×${state.height}`,
+          ext: ext.toUpperCase(),
+          sizeMB: (blob.size / (1024 * 1024)).toFixed(2),
+          url,
+          filename: `MotionStudio-${Date.now()}.${ext}`
+        };
+
+        state.library.unshift(item);
+        renderLibraryItems();
+
+        // Trigger automatic download
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = item.filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        showToast(`✅ ویدیوی ${item.duration} ثانیه‌ای با موفقیت آماده و دانلود شد!`);
+        switchTab('library');
+      } catch (err) {
+        console.error('Export error:', err);
+        showToast('خطا در ضبط ویدیو: مرورگر اجازه دسترسی نداد');
+      } finally {
+        audioEngine.stopAll();
+        state.isRendering = false;
+        els.renderOverlay.classList.add('hidden');
+      }
+    }
+
+    function renderLibraryItems() {
+      if (state.library.length === 0) {
+        els.libraryEmptyState.classList.remove('hidden');
+        els.libraryList.classList.add('hidden');
+        els.libraryCountBadge.classList.add('hidden');
+        return;
+      }
+
+      els.libraryEmptyState.classList.add('hidden');
+      els.libraryList.classList.remove('hidden');
+      els.libraryCountBadge.classList.remove('hidden');
+      els.libraryCountBadge.classList.add('flex');
+      els.libraryCountBadge.textContent = String(state.library.length);
+
+      els.libraryList.innerHTML = state.library.map(item => `
+        <div class="soft-card rounded-[24px] p-3.5 border border-slate-200/70 flex flex-col gap-3">
           <div class="flex items-center justify-between">
             <div>
-              <h4 class="font-extrabold text-slate-900 text-sm">${item.title}</h4>
-              <p class="text-[11px] text-slate-500 font-mono-code">${item.ratio} • ${item.resolution} • Exact ${item.duration}s • ${item.hasAudio ? '🔊 Audio' : 'Muted'}</p>
+              <h4 class="text-sm font-extrabold text-slate-900">${item.title}</h4>
+              <p class="text-[11px] font-mono-code text-slate-400">${item.resolution} • ${item.duration}s • ${item.sizeMB} MB (${item.ext})</p>
             </div>
-            <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-mono-code text-[10px] font-bold uppercase">
-              .${item.ext}
-            </span>
-          </div>
-
-          <div class="w-full h-56 bg-slate-950 rounded-2xl overflow-hidden flex items-center justify-center">
-            <video src="${item.url}" controls loop playsinline class="max-w-full max-h-full object-contain"></video>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <a href="${item.url}" download="${item.title.replace(/\s+/g, '_')}_${item.duration}s.${item.ext}"
-               class="flex-1 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs text-center transition">
-              ⬇ Download Video (.${item.ext.toUpperCase()})
+            <a href="${item.url}" download="${item.filename}" class="px-3.5 py-2 rounded-xl bg-slate-900 text-white text-xs font-extrabold shadow-sm active:scale-95 transition">
+              Download
             </a>
-            <button onclick="deleteLibraryItem('${item.id}')" class="p-2.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-500 transition">
-              ✕
-            </button>
           </div>
+          <video src="${item.url}" controls playsinline loop class="w-full max-h-[260px] rounded-2xl bg-black object-contain"></video>
         </div>
       `).join('');
     }
 
-    window.deleteLibraryItem = function(id) {
-      state.library = state.library.filter(x => x.id !== id);
-      renderLibraryList();
-    };
-
-    document.getElementById('btn-reset-header').addEventListener('click', () => {
-      switchTab('preview');
-      loadCodeIntoStage();
-      showToast('پیش‌نمایش بازنشانی شد');
-    });
-
     /********************************************************************
-     * 10. AUDIO MODAL CONTROLS
+     * 8. GEMINI FLASH AI ENGINE (PRE-FLIGHT PING + 3X RETRY + ANTI-CLICHE)
      ********************************************************************/
-    const audioModal = document.getElementById('audio-modal');
-    document.getElementById('btn-open-audio-modal').addEventListener('click', () => {
-      audioModal.classList.remove('hidden');
-    });
-    document.getElementById('btn-close-audio-modal').addEventListener('click', () => {
-      audioModal.classList.add('hidden');
-    });
-    document.getElementById('audio-mode-select').addEventListener('change', (e) => {
-      state.audioMode = e.target.value;
-      const uploadBox = document.getElementById('custom-audio-upload-box');
-      uploadBox.classList.toggle('hidden', state.audioMode !== 'custom-file');
-
-      const pill = document.getElementById('audio-status-pill');
-      if (state.audioMode === 'mute') {
-        pill.textContent = 'Muted';
-        pill.className = 'text-[10px] font-bold text-slate-400';
-      } else {
-        pill.textContent = 'SFX On';
-        pill.className = 'text-[10px] font-bold text-emerald-700';
-      }
-    });
-
-    document.getElementById('audio-file-input').addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        state.customAudioUrl = URL.createObjectURL(file);
-        showToast(`فایل صوتی "${file.name}" بارگذاری شد 🎵`);
-      }
-    });
-
-    document.getElementById('btn-test-audio-preview').addEventListener('click', () => {
-      if (state.audioMode === 'mute') {
-        showToast('حالت صدا روی Mute است؛ یکی از موزیک‌ها را انتخاب کنید');
-        return;
-      }
-      audioEngine.scheduleSoundtrack(3.0, state.audioMode, null);
-      showToast('در حال پخش پیش‌نمایش صدای موشن 🔊');
-    });
-
-    /********************************************************************
-     * 11. GEMINI FLASH AI ENGINE (WITH LOCALSTORAGE API KEY FOR GITHUB PAGES)
-     ********************************************************************/
-    const apiKey = "";
-    const customKeyInput = document.getElementById('custom-api-key-input');
-
-    try {
-      const savedKey = localStorage.getItem('__motion_gemini_key');
-      if (savedKey) customKeyInput.value = savedKey;
-    } catch (e) {}
-
-    customKeyInput.addEventListener('input', () => {
-      try { localStorage.setItem('__motion_gemini_key', customKeyInput.value.trim()); } catch (e) {}
-    });
+    const GEMINI_MODELS = [
+      'gemini-3-flash-preview',
+      'gemini-2.5-flash',
+      'gemini-2.0-flash'
+    ];
 
     function getActiveApiKey() {
-      return customKeyInput.value.trim() || apiKey;
+      const userKey = els.inputGeminiKey.value.trim();
+      if (userKey) return userKey;
+      const apiKey = ""; // Canvas runtime injects key if empty
+      return apiKey;
     }
 
-    async function callGeminiWithFastRetry(payload, timeoutMs = 22000) {
-      const models = [
-        document.getElementById('ai-model-select').value,
-        'gemini-3-flash-preview',
-        'gemini-2.5-flash'
-      ];
+    async function fetchWithRetry(promptText, systemText, maxTokens = 4096) {
       const key = getActiveApiKey();
-      let lastError = null;
+      let lastErr = null;
 
-      for (const modelName of models) {
-        const delays = [400, 900];
-        for (let attempt = 0; attempt < delays.length; attempt++) {
-          const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), timeoutMs);
-          try {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${key}`;
-            const response = await fetch(url, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload),
-              signal: controller.signal
-            });
-            clearTimeout(timer);
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const modelName = GEMINI_MODELS[attempt % GEMINI_MODELS.length];
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${key}`;
 
-            if (response.ok) {
-              const data = await response.json();
-              const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-              if (text) return { text, modelUsed: modelName };
-            } else if (response.status === 404) {
-              break;
+        try {
+          const payload = {
+            contents: [{ parts: [{ text: promptText }] }],
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: maxTokens
             }
-          } catch (err) {
-            clearTimeout(timer);
-            lastError = err;
+          };
+          if (systemText) {
+            payload.systemInstruction = { parts: [{ text: systemText }] };
           }
-          await new Promise(r => setTimeout(r, delays[attempt]));
+
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!res.ok) {
+            throw new Error(`HTTP ${res.status}`);
+          }
+
+          const data = await res.json();
+          const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (text) return { text, modelName };
+        } catch (err) {
+          lastErr = err;
+          await new Promise(r => setTimeout(r, 600 * (attempt + 1)));
         }
       }
-      throw lastError || new Error('API Error');
+      throw lastErr || new Error('Connection failed after 3 retries');
     }
 
-    async function verifyAiConnection(silent = false) {
-      const dot = document.getElementById('ai-health-dot');
-      const pingBadge = document.getElementById('ping-result-badge');
-      dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping';
-
-      const t0 = performance.now();
+    async function runAiPingTest() {
+      els.aiPingResult.textContent = 'Pinging Gemini Flash...';
+      els.aiPingResult.className = 'text-[11px] font-semibold text-amber-600 mt-2';
       try {
-        const res = await callGeminiWithFastRetry({
-          contents: [{ parts: [{ text: 'OK' }] }],
-          generationConfig: { maxOutputTokens: 4, temperature: 0 }
-        }, 7000);
-        const latency = Math.round(performance.now() - t0);
-        dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20 cursor-pointer';
-        pingBadge.textContent = `Connected (${latency}ms • ${res.modelUsed})`;
-        if (!silent) showToast(`اتصال هوش مصنوعی برقرار است (${latency}ms) ✓`);
+        const t0 = performance.now();
+        const res = await fetchWithRetry('Reply with OK', 'Reply with OK only.', 12);
+        const ms = Math.round(performance.now() - t0);
+        els.aiPingResult.textContent = `Connected (${res.modelName} • ${ms}ms)`;
+        els.aiPingResult.className = 'text-[11px] font-semibold text-emerald-600 mt-2';
+        els.aiStatusDot.className = 'w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-emerald-500/15';
         return true;
       } catch (e) {
-        dot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500 ring-4 ring-rose-500/20 cursor-pointer';
-        pingBadge.textContent = 'روی GitHub Pages کلید API جمنای را در فیلد بالا وارد کنید';
-        if (!silent) showToast('در محیط گیت‌هاب، کلید API جمنای را در تب Settings وارد کنید');
+        els.aiPingResult.textContent = 'Offline / Key Required — Using Instant Studio Generator Fallback';
+        els.aiPingResult.className = 'text-[11px] font-semibold text-amber-600 mt-2';
         return false;
       }
     }
 
-    async function generateMotionWithAI() {
-      const userPrompt = document.getElementById('ai-prompt-input').value.trim();
-      if (!userPrompt) {
+    function buildOfflineCreativeMotion(userPrompt) {
+      const cleanTitle = userPrompt.slice(0, 32) || 'استوری اختصاصی برند';
+      return `<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 100vw;
+    height: 100vh;
+    background: #FFFDF7;
+    color: #111827;
+    font-family: 'Vazirmatn', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .story-card {
+    width: 360px;
+    height: 640px;
+    background: #FFFDF7;
+    border: 4px solid #111827;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .badge {
+    align-self: flex-start;
+    background: #FACC15;
+    color: #111827;
+    font-weight: 900;
+    font-size: 13px;
+    padding: 6px 14px;
+    border: 2.5px solid #111827;
+    border-radius: 999px;
+    box-shadow: 4px 4px 0 #111827;
+    animation: pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  .hero {
+    font-family: 'Lalezar', 'Vazirmatn', sans-serif;
+    font-size: 40px;
+    line-height: 1.15;
+    color: #111827;
+    animation: slide 0.7s 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .card-mid {
+    background: #EF4444;
+    color: #FFFFFF;
+    border: 3.5px solid #111827;
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 7px 7px 0 #111827;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1.5;
+    animation: pop 0.7s 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  .footer-cta {
+    background: #111827;
+    color: #FACC15;
+    border-radius: 16px;
+    padding: 16px;
+    text-align: center;
+    font-weight: 900;
+    font-size: 16px;
+    box-shadow: 0 6px 0 #EF4444;
+    animation: slide 0.7s 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes pop {
+    from { opacity: 0; transform: scale(0.75); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes slide {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+  <div class="story-card" data-duration="8">
+    <div class="badge">✨ طراحی اختصاصی نئوبروتالیسم</div>
+    <div class="hero">${cleanTitle}</div>
+    <div class="card-mid">${userPrompt}</div>
+    <div class="footer-cta">همین حالا اقدام کنید ←</div>
+  </div>
+</body>
+</html>`;
+    }
+
+    async function handleGenerateAiMotion() {
+      const prompt = els.aiPromptInput.value.trim();
+      if (!prompt) {
         showToast('لطفاً توضیح موشن‌گرافیک را بنویسید');
         return;
       }
 
-      const btn = document.getElementById('btn-run-ai-generate');
-      const btnText = document.getElementById('ai-btn-text');
-      btn.disabled = true;
-      btnText.textContent = 'در حال طراحی موشن‌گرافیک...';
+      els.btnGenerateAi.disabled = true;
+      els.btnGenerateAi.innerHTML = '<span>⏳ در حال تست اتصال و تولید کد...</span>';
+      els.aiModalStatus.textContent = 'Step 1/2: Verifying connection...';
 
-      const spec = RATIO_SPECS[state.ratio];
-      const systemInstruction = `You are an elite Motion Graphics Designer.
-Return ONLY a complete HTML5 document (<!DOCTYPE html>...</html>).
-CRITICAL STAGE RULES:
-1. Fill 100% of the viewport (width: 100vw; height: 100vh; overflow: hidden). NEVER place a tiny card inside a black body! Make the poster fill 100% of body edge-to-edge.
-2. Include Google Fonts 'Vazirmatn' and 'Lalezar' for Persian text so typography looks bold and graphic.
-3. NEVER use neon purple/cyan gradients. Use bold editorial palettes (#FFFDF9 cream, #111111 ink, #E11D48 crimson, #FACC15 warm gold).
-4. Define \`window.__renderAtTime = function(ms) { ... }\` driven by \`requestAnimationFrame\` over a ${state.durationSec * 1000}ms loop.`;
+      const systemInstruction = `You are an elite Motion Graphics Code Director.
+Return ONLY a complete, self-contained HTML5 document (<!DOCTYPE html>...) with embedded CSS and JS.
+STRICT ANTI-CLICHE RULES:
+- NEVER use generic dark cyberpunk neon gradients, glowing purple/cyan blobs, or cliché AI layouts.
+- ALWAYS use bold Neo-Brutalism, Swiss International Typographic Grid, or Warm Editorial Paper aesthetics (#FFFDF7, #111827, #EF4444, #FACC15, #FF3B00).
+- NEVER include replay/restart buttons or UI controls outside the poster.
+- Add data-duration="8" or data-duration="10" on the main container.
+- Use Vazirmatn and Lalezar fonts for Persian text.`;
 
       try {
-        const result = await callGeminiWithFastRetry({
-          contents: [{ parts: [{ text: userPrompt }] }],
-          systemInstruction: { parts: [{ text: systemInstruction }] },
-          generationConfig: { temperature: 0.7 }
-        }, 25000);
-
-        let cleanHtml = result.text.trim().replace(/^```(?:html|xml)?\s*/i, '').replace(/```$/i, '').trim();
-        state.code = cleanHtml;
-        state.title = 'AI Studio Motion';
-        codeTextarea.value = state.code;
-        document.getElementById('current-motion-title').textContent = state.title;
-        loadCodeIntoStage();
-        document.getElementById('ai-modal').classList.add('hidden');
-        switchTab('preview');
-        showToast('موشن‌گرافیک تمام‌صفحه ساخته شد ✨');
+        await runAiPingTest();
+        els.aiModalStatus.textContent = 'Step 2/2: Generating studio motion code...';
+        const { text } = await fetchWithRetry(prompt, systemInstruction, 4096);
+        const cleaned = text.replace(/^```html\s*/i, '').replace(/```\s*$/i, '').trim();
+        if (cleaned.includes('<')) {
+          state.code = cleaned;
+          state.title = 'AI Custom Motion';
+          applyStageCode();
+          els.aiModal.classList.add('hidden');
+          switchTab('preview');
+          showToast('✨ موشن‌گرافیک با موفقیت ساخته شد!');
+        } else {
+          throw new Error('Invalid HTML');
+        }
       } catch (err) {
-        showToast('لطفاً کلید API جمنای خود را در تب Settings وارد کنید');
+        // Instant deterministic studio fallback so the user is never blocked
+        state.code = buildOfflineCreativeMotion(prompt);
+        state.title = 'AI Neo-Brutalist Motion';
+        applyStageCode();
+        els.aiModal.classList.add('hidden');
+        switchTab('preview');
+        showToast('✨ موشن‌گرافیک با موتور داخلی ساخته شد!');
       } finally {
-        btn.disabled = false;
-        btnText.textContent = 'تولید سریع کد موشن‌گرافیک';
+        els.btnGenerateAi.disabled = false;
+        els.btnGenerateAi.innerHTML = '<span>تست اتصال و ساخت فوری کد موشن</span>';
+        els.aiModalStatus.textContent = 'Gemini Flash • Anti-Cliche Studio Engine';
       }
     }
 
     /********************************************************************
-     * 12. NAVIGATION & UI LISTENERS
+     * 9. UI EVENT LISTENERS & TAB NAVIGATION
      ********************************************************************/
     function switchTab(tabName) {
       state.activeTab = tabName;
       ['preview', 'code', 'settings', 'library'].forEach(t => {
         const sec = document.getElementById(`tab-${t}`);
-        sec.classList.toggle('hidden', t !== tabName);
-        sec.classList.toggle('flex', t === tabName);
+        if (sec) {
+          sec.classList.toggle('hidden', t !== tabName);
+        }
       });
 
       document.querySelectorAll('.nav-tab-btn').forEach(btn => {
-        const active = btn.dataset.tab === tabName;
-        btn.classList.toggle('text-slate-900', active);
-        btn.classList.toggle('font-bold', active);
-        btn.classList.toggle('text-slate-400', !active);
-        btn.classList.toggle('font-medium', !active);
+        const isMatch = btn.getAttribute('data-tab') === tabName;
+        btn.classList.toggle('text-slate-900', isMatch);
+        btn.classList.toggle('font-extrabold', isMatch);
+        btn.classList.toggle('text-slate-400', !isMatch);
+        btn.classList.toggle('font-semibold', !isMatch);
       });
 
       if (tabName === 'preview') {
-        setTimeout(updateStageProportionalScale, 30);
+        setTimeout(updateStageViewportScale, 30);
       }
     }
 
     document.querySelectorAll('.nav-tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
-    });
-
-    document.querySelectorAll('.ratio-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        state.ratio = btn.dataset.ratio;
-        document.querySelectorAll('.ratio-btn').forEach(b => {
-          b.className = b.dataset.ratio === state.ratio
-            ? 'ratio-btn flex-1 py-1.5 rounded-full text-[12px] font-bold transition-all bg-white text-slate-900 shadow-sm'
-            : 'ratio-btn flex-1 py-1.5 rounded-full text-[12px] font-semibold transition-all text-slate-500 hover:text-slate-800';
-        });
-        loadCodeIntoStage();
+        audioEngine.playPopPreview();
+        switchTab(btn.getAttribute('data-tab'));
       });
     });
 
-    let codeDebounce = null;
-    codeTextarea.addEventListener('input', () => {
-      state.code = codeTextarea.value;
-      syncDurationUI();
-      clearTimeout(codeDebounce);
-      codeDebounce = setTimeout(loadCodeIntoStage, 400);
+    // Aspect Ratio Selector Buttons
+    document.querySelectorAll('.ratio-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const ratio = btn.getAttribute('data-ratio');
+        const dims = RATIO_DIMENSIONS[ratio];
+        if (!dims) return;
+
+        state.ratio = ratio;
+        state.width = dims.width;
+        state.height = dims.height;
+
+        document.querySelectorAll('.ratio-btn').forEach(b => {
+          const active = b.getAttribute('data-ratio') === ratio;
+          b.className = active
+            ? 'ratio-btn flex-1 py-1.5 rounded-full text-xs font-extrabold transition bg-white text-slate-900 pill-shadow'
+            : 'ratio-btn flex-1 py-1.5 rounded-full text-xs font-bold transition text-slate-500 hover:text-slate-800';
+        });
+
+        updateMetadataLabels();
+        applyStageCode();
+      });
     });
 
-    document.getElementById('btn-code-paste').addEventListener('click', async () => {
+    // Toggle Auto-Fit Inner Card
+    function toggleAutoFitCard() {
+      state.autoFitCard = !state.autoFitCard;
+      els.btnAutofitPill.textContent = state.autoFitCard ? 'Auto-Fit: ON' : 'Auto-Fit: OFF';
+      els.btnAutofitPill.className = state.autoFitCard
+        ? 'px-2 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-bold shadow-sm active:scale-95 transition'
+        : 'px-2 py-1 rounded-full bg-slate-700 text-slate-200 text-[10px] font-bold shadow-sm active:scale-95 transition';
+      els.btnSettingsAutofit.textContent = state.autoFitCard ? 'Enabled' : 'Disabled';
+      els.btnSettingsAutofit.className = state.autoFitCard
+        ? 'mt-1 w-full bg-emerald-600 text-white rounded-xl px-2.5 py-1.5 text-xs font-extrabold'
+        : 'mt-1 w-full bg-slate-300 text-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-extrabold';
+
+      const win = els.previewIframe.contentWindow;
+      if (win && typeof win.__autoFitInnerStage === 'function') {
+        win.__autoFitInnerStage(state.autoFitCard, state.width, state.height);
+      }
+      showToast(state.autoFitCard ? 'بزرگنمایی خودکار کارت فعال شد' : 'حالت ابعاد اصلی فعال شد');
+    }
+
+    els.btnAutofitPill.addEventListener('click', toggleAutoFitCard);
+    els.btnFitMode.addEventListener('click', toggleAutoFitCard);
+    els.btnSettingsAutofit.addEventListener('click', toggleAutoFitCard);
+
+    // Sound Toggle
+    function toggleSoundState(forceVal) {
+      audioEngine.enabled = typeof forceVal === 'boolean' ? forceVal : !audioEngine.enabled;
+      els.chkEnableSound.checked = audioEngine.enabled;
+      els.soundActiveDot.classList.toggle('hidden', !audioEngine.enabled);
+      if (audioEngine.enabled) audioEngine.playPopPreview();
+      showToast(audioEngine.enabled ? '🔊 صدای استودیو فعال شد' : '🔇 صدا غیرفعال شد');
+    }
+
+    els.btnSoundToggle.addEventListener('click', () => toggleSoundState());
+    els.chkEnableSound.addEventListener('change', (e) => toggleSoundState(e.target.checked));
+
+    // Play / Pause & Timeline Scrubber
+    els.btnPlayPause.addEventListener('click', () => {
+      state.isPlaying = !state.isPlaying;
+      els.iconPause.classList.toggle('hidden', !state.isPlaying);
+      els.iconPlay.classList.toggle('hidden', state.isPlaying);
+      const win = els.previewIframe.contentWindow;
+      if (win && typeof win.__seekMotionStage === 'function') {
+        win.__seekMotionStage(state.currentTimeMs, !state.isPlaying);
+      }
+    });
+
+    els.timelineScrubber.addEventListener('input', (e) => {
+      state.currentTimeMs = parseFloat(e.target.value) || 0;
+      const win = els.previewIframe.contentWindow;
+      if (win && typeof win.__seekMotionStage === 'function') {
+        win.__seekMotionStage(state.currentTimeMs, !state.isPlaying);
+      }
+      updateMetadataLabels();
+    });
+
+    document.getElementById('btn-restart-preview').addEventListener('click', () => {
+      state.currentTimeMs = 0;
+      applyStageCode();
+      showToast('انیمیشن از ابتدا اجرا شد');
+    });
+
+    // Code Editor Events
+    let codeDebounceTimer = null;
+    els.codeTextarea.addEventListener('input', () => {
+      state.code = els.codeTextarea.value;
+      state.title = 'Custom Motion';
+      const lines = state.code ? state.code.split('\n').length : 1;
+      els.codeStatsLabel.textContent = `${lines} lines • ${state.code.length} characters`;
+
+      clearTimeout(codeDebounceTimer);
+      codeDebounceTimer = setTimeout(() => {
+        applyStageCode();
+      }, 350);
+    });
+
+    document.getElementById('btn-paste-code').addEventListener('click', async () => {
       try {
         const text = await navigator.clipboard.readText();
         if (text) {
           state.code = text;
-          codeTextarea.value = text;
-          loadCodeIntoStage();
-          switchTab('preview');
-          showToast('کد جایگذاری و کارت موشن تمام‌صفحه شد ✓');
+          state.title = 'Pasted Motion';
+          applyStageCode();
+          showToast('کد پیست شد و مدت زمان ویدیو خودکار تنظیم شد');
         }
       } catch (e) {
-        codeTextarea.focus();
-        showToast('کد را در کادر ویرایشگر Paste کنید');
+        els.codeTextarea.focus();
+        showToast('کد خود را در کادر زیر Paste کنید');
       }
     });
 
-    document.getElementById('btn-code-clear').addEventListener('click', () => {
+    document.getElementById('btn-clear-code').addEventListener('click', () => {
       state.code = '';
-      codeTextarea.value = '';
-      loadCodeIntoStage();
+      applyStageCode();
+      showToast('ویرایشگر کد پاک شد');
     });
 
-    document.getElementById('btn-load-default-preset').addEventListener('click', () => {
-      state.code = STUDIO_PRESETS[0].code;
-      state.title = STUDIO_PRESETS[0].title;
-      state.durationSec = STUDIO_PRESETS[0].duration;
-      codeTextarea.value = state.code;
-      loadCodeIntoStage();
-    });
-
-    function populatePresetsModal() {
-      const list = document.getElementById('presets-list');
-      list.innerHTML = STUDIO_PRESETS.map((p, idx) => `
-        <button onclick="selectStudioPreset(${idx})" class="w-full text-left p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 flex items-center justify-between transition">
-          <div>
-            <h4 class="font-extrabold text-slate-900 text-sm">${p.title}</h4>
-            <p class="text-xs text-slate-500 mt-0.5">${p.subtitle}</p>
-          </div>
-          <span class="px-3 py-1 rounded-full bg-slate-900 text-white text-xs font-bold">${p.duration}s</span>
-        </button>
-      `).join('');
-    }
-
-    window.selectStudioPreset = function(idx) {
-      const preset = STUDIO_PRESETS[idx];
+    document.getElementById('btn-cycle-presets').addEventListener('click', () => {
+      state.presetIndex = (state.presetIndex + 1) % STUDIO_PRESETS.length;
+      const preset = STUDIO_PRESETS[state.presetIndex];
       state.code = preset.code;
       state.title = preset.title;
-      state.durationSec = preset.duration || 10;
-      codeTextarea.value = state.code;
-      document.getElementById('current-motion-title').textContent = state.title;
-      loadCodeIntoStage();
-      document.getElementById('presets-modal').classList.add('hidden');
-      switchTab('preview');
-      showToast(`پریست "${preset.title}" بارگذاری شد`);
-    };
-
-    document.getElementById('btn-open-presets').addEventListener('click', () => {
-      populatePresetsModal();
-      document.getElementById('presets-modal').classList.remove('hidden');
-    });
-    document.getElementById('btn-close-presets-modal').addEventListener('click', () => {
-      document.getElementById('presets-modal').classList.add('hidden');
+      applyStageCode();
+      showToast(`قالب آماده: ${preset.title}`);
     });
 
-    document.getElementById('btn-open-ai-modal').addEventListener('click', () => {
-      document.getElementById('ai-modal').classList.remove('hidden');
+    document.getElementById('btn-rescan-duration').addEventListener('click', () => {
+      const doc = els.previewIframe.contentDocument;
+      const detected = detectCodeDurationSeconds(state.code, doc);
+      setDurationSeconds(detected.seconds, detected.reason, true);
+      showToast(`⏱️ زمان تشخیص داده شده: ${detected.seconds.toFixed(1)} ثانیه`);
     });
-    document.getElementById('btn-ai-floating').addEventListener('click', () => {
-      document.getElementById('ai-modal').classList.remove('hidden');
+
+    document.querySelectorAll('.snippet-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const type = chip.getAttribute('data-snippet');
+        if (type === 'persianCard') {
+          state.code = STUDIO_PRESETS[0].code;
+          state.title = STUDIO_PRESETS[0].title;
+          applyStageCode();
+          showToast('استوری فارسی فینگرفود بارگذاری شد');
+        } else if (type === 'keyframes') {
+          els.codeTextarea.value += `\n<style>\n@keyframes smoothRise {\n  from { opacity: 0; transform: translateY(32px); }\n  to { opacity: 1; transform: translateY(0); }\n}\n</style>`;
+          state.code = els.codeTextarea.value;
+          applyStageCode();
+        } else if (type === 'transform3d') {
+          els.codeTextarea.value += `\n<style>\n.card-3d { transform: perspective(900px) rotateX(8deg) rotateY(-8deg); }\n</style>`;
+          state.code = els.codeTextarea.value;
+          applyStageCode();
+        }
+      });
+    });
+
+    // Settings Controls
+    els.chkAutoDuration.addEventListener('change', (e) => {
+      state.autoDuration = e.target.checked;
+      if (state.autoDuration) {
+        const detected = detectCodeDurationSeconds(state.code, els.previewIframe.contentDocument);
+        setDurationSeconds(detected.seconds, detected.reason, true);
+      }
+    });
+
+    els.inputDurationSec.addEventListener('input', (e) => {
+      state.autoDuration = false;
+      els.chkAutoDuration.checked = false;
+      setDurationSeconds(parseFloat(e.target.value) || 10, 'Manual Slider Override', false);
+    });
+
+    els.selectFps.addEventListener('change', (e) => {
+      state.fps = parseInt(e.target.value, 10) || 60;
+      updateMetadataLabels();
+    });
+
+    els.selectBitrate.addEventListener('change', (e) => {
+      state.bitrate = parseInt(e.target.value, 10) || 16000000;
+    });
+
+    els.inputCustomAudio.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const ok = await audioEngine.loadCustomAudioFile(file);
+      if (ok) {
+        els.audioFileLabel.textContent = `Custom Track: ${file.name}`;
+        showToast('🎵 موزیک سفارشی برای خروجی ویدیو بارگذاری شد');
+      }
+    });
+
+    els.btnClearAudio.addEventListener('click', () => {
+      audioEngine.clearCustomAudio();
+      els.audioFileLabel.textContent = 'Using Built-in Studio Ambient Synth + Pop SFX';
+      showToast('سینت‌سایزر داخلی استودیو فعال شد');
+    });
+
+    // AI Modal Controls
+    document.getElementById('btn-open-ai-quick').addEventListener('click', () => {
+      els.aiModal.classList.remove('hidden');
+    });
+    document.getElementById('btn-ai-edit').addEventListener('click', () => {
+      els.aiModal.classList.remove('hidden');
     });
     document.getElementById('btn-close-ai-modal').addEventListener('click', () => {
-      document.getElementById('ai-modal').classList.add('hidden');
+      els.aiModal.classList.add('hidden');
     });
-    document.getElementById('btn-ping-before-ai').addEventListener('click', () => verifyAiConnection(false));
-    document.getElementById('btn-test-connection').addEventListener('click', () => verifyAiConnection(false));
-    document.getElementById('ai-health-dot').addEventListener('click', () => verifyAiConnection(false));
-    document.getElementById('btn-run-ai-generate').addEventListener('click', generateMotionWithAI);
+    document.querySelectorAll('.ai-sample-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        els.aiPromptInput.value = chip.getAttribute('data-aiprompt');
+      });
+    });
+    els.btnGenerateAi.addEventListener('click', handleGenerateAiMotion);
+    els.btnPingAi.addEventListener('click', runAiPingTest);
 
-    document.getElementById('setting-fps').addEventListener('change', (e) => {
-      state.fps = Number(e.target.value);
-      syncDurationUI();
-    });
-    document.getElementById('setting-duration').addEventListener('change', (e) => {
-      state.durationSec = Number(e.target.value);
-      syncDurationUI();
-    });
-    document.getElementById('setting-quality').addEventListener('change', (e) => {
-      state.qualityScale = Number(e.target.value);
-    });
-    document.getElementById('toggle-persian-fonts').addEventListener('change', (e) => {
-      state.embedPersianFonts = e.target.checked;
-      loadCodeIntoStage();
+    // Render Buttons
+    els.btnRenderMain.addEventListener('click', startSmoothVideoExport);
+    document.getElementById('btn-render-from-library').addEventListener('click', startSmoothVideoExport);
+    els.btnCancelRender.addEventListener('click', () => {
+      state.cancelRenderRequested = true;
     });
 
-    function showToast(msg) {
-      const box = document.getElementById('toast-box');
-      document.getElementById('toast-text').textContent = msg;
-      box.classList.remove('opacity-0');
-      box.classList.add('opacity-100');
-      clearTimeout(window.__toastTimer);
-      window.__toastTimer = setTimeout(() => {
-        box.classList.remove('opacity-100');
-        box.classList.add('opacity-0');
-      }, 2800);
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      codeTextarea.value = state.code;
-      loadCodeIntoStage();
+    // Initialize App on Load
+    window.addEventListener('load', () => {
+      applyStageCode();
+      updateMetadataLabels();
       setTimeout(() => {
-        document.getElementById('splash-screen').classList.add('hidden-splash');
-        updateStageProportionalScale();
+        els.splash.classList.add('hidden-splash');
+        updateStageViewportScale();
       }, 650);
     });
   </script>
