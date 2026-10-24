@@ -1579,11 +1579,11 @@
         const totalMs = state.durationSec * 1000;
         state.currentTimeMs += dt;
         if (state.currentTimeMs >= totalMs) {
-          state.currentTimeMs = 0;
-          const win = els.previewIframe.contentWindow;
-          if (win && typeof win.__seekMotionStage === 'function') {
-            win.__seekMotionStage(0, false);
-          }
+          state.currentTimeMs = state.currentTimeMs % totalMs;
+        }
+        const win = els.previewIframe.contentWindow;
+        if (win && typeof win.__seekMotionStage === 'function') {
+          win.__seekMotionStage(state.currentTimeMs, false);
         }
         els.timelineScrubber.value = String(Math.round(state.currentTimeMs));
         const curSec = (state.currentTimeMs / 1000).toFixed(1);
@@ -1978,21 +1978,39 @@
       }
     }
 
-    function getSupportedRecorderMime() {
-      const candidates = [
-        'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
-        'video/mp4;codecs=avc1',
-        'video/mp4',
+    const AUDIO_CODEC_RE = /(opus|mp4a|aac)/i;
+
+    function createBestRecorder(stream, wantAudio) {
+      const baseOpts = {
+        videoBitsPerSecond: state.bitrate,
+        audioBitsPerSecond: 192000
+      };
+      const candidates = wantAudio ? [
         'video/webm;codecs=vp9,opus',
         'video/webm;codecs=vp8,opus',
+        'video/webm;codecs=h264,opus',
+        'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+        'video/mp4;codecs=avc1.4d002a,mp4a.40.2',
+        'video/mp4;codecs=avc1,mp4a.40.2'
+      ] : [
+        'video/mp4;codecs=avc1.42E01E',
+        'video/mp4',
+        'video/webm;codecs=vp9',
         'video/webm'
       ];
-      for (const mime of candidates) {
-        if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(mime)) {
-          return mime;
-        }
+
+      for (let i = 0; i < candidates.length; i++) {
+        const mime = candidates[i];
+        try {
+          if (typeof MediaRecorder.isTypeSupported === 'function' && !MediaRecorder.isTypeSupported(mime)) continue;
+          const rec = new MediaRecorder(stream, Object.assign({ mimeType: mime }, baseOpts));
+          const effective = rec.mimeType || mime;
+          if (!wantAudio || AUDIO_CODEC_RE.test(effective)) return rec;
+          try { rec.stop(); } catch (e) {}
+        } catch (e) {}
       }
-      return '';
+      try { return new MediaRecorder(stream, baseOpts); } catch (e) {}
+      return new MediaRecorder(stream);
     }
 
     async function startSmoothVideoExport() {
@@ -2050,15 +2068,16 @@
           audioStream.getAudioTracks().forEach(t => combinedStream.addTrack(t));
         }
 
-        const mimeType = getSupportedRecorderMime();
-        const recorderOptions = {
-          videoBitsPerSecond: state.bitrate,
-          audioBitsPerSecond: 192000
-        };
-        if (mimeType) recorderOptions.mimeType = mimeType;
+        const hasAudio = !!(audioStream && audioStream.getAudioTracks && audioStream.getAudioTracks().length);
+        const recorder = createBestRecorder(combinedStream, hasAudio);
+        const effectiveMime = recorder.mimeType || 'video/webm';
+        const hasAudioCodec = AUDIO_CODEC_RE.test(effectiveMime);
+
+        els.renderStatusSubtitle.textContent =
+          state.width + '×' + state.height + ' • ' + state.fps + 'fps • ' + effectiveMime.split(';')[0] +
+          (hasAudioCodec ? ' + audio' : (hasAudio ? ' (audio unsupported by browser)' : ''));
 
         const chunks = [];
-        const recorder = new MediaRecorder(combinedStream, recorderOptions);
         recorder.ondataavailable = (e) => {
           if (e.data && e.data.size > 0) chunks.push(e.data);
         };
@@ -2120,7 +2139,7 @@
           return;
         }
 
-        const finalMime = recorder.mimeType || mimeType || 'video/webm';
+        const finalMime = recorder.mimeType || effectiveMime || 'video/webm';
         const ext = finalMime.includes('mp4') ? 'mp4' : 'webm';
         const blob = new Blob(chunks, { type: finalMime });
         const url = URL.createObjectURL(blob);
